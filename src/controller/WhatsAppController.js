@@ -238,6 +238,87 @@ class WhatsAppController {
 
         });
 
+        this.el.contactsMessagesList.querySelectorAll('.contact-item').forEach(item => {
+
+            // item.on('click', event => {
+
+            //     let contact = JSON.parse(item.dataset.contact);
+
+            //     this.setActiveChat(contact);
+
+            // });
+            item.on('click', event => {
+                this.el.home.hide();
+                this.el.main.css({
+                    display: 'flex',
+                })
+            })   
+
+        });
+
+        this.el.btnAttach.on('click', event => {
+
+            //semelhante ao default, usado para não os eventos desse elemento não se 
+            //propagarem para o evento pai
+            event.stopPropagation();
+
+            this.el.menuAttach.addClass('open');
+            //Bind para passar o this dessa função para a outra
+            document.addEventListener('click', this.closeMenuAttach.bind(this));
+
+        });
+
+        this.el.btnAttachPhoto.on('click', event => {
+
+            // this.closeAllMainPanel();
+            // this.el.panelMessagesContainer.show();
+            // this.el.inputPhoto.click();
+            console.log('photo')
+
+        });
+
+
+        this.el.btnAttachCamera.on('click', event => {
+
+            console.log('camera')
+            // this.closeAllMainPanel();
+            // this.el.panelMessagesContainer.hide();
+            // this.el.panelCamera.addClass('open');
+            // this.el.panelCamera.sleep(100, () => {
+            //     this.el.panelCamera.style.height = 'calc(100% - 120px)';
+            // });
+
+            // this._cameraController = new CameraController(this.el.videoCamera);
+
+        });
+
+
+        this.el.btnAttachDocument.on('click', event => {
+            console.log('documento')
+            // this.el.inputDocument.click();
+
+        });
+
+
+        this.el.btnAttachContact.on('click', event => {
+
+            console.log('contact')
+
+            // this._contactsController = new ContactsController(this.el.modalContacts, this._user);
+
+            // this._contactsController.open();
+
+            // this._contactsController.on('select', contact => {
+
+            //     Message.sendContact(this._activeContact.chatId, this._user.email, contact);
+
+            //     this._contactsController.close();
+
+            // });
+
+        });
+
+
 
      
     }
@@ -245,6 +326,13 @@ class WhatsAppController {
     closeAllLeftPanel() {
         this.el.panelAddContact.hide();
         this.el.panelEditProfile.hide()
+    }
+
+    closeMenuAttach(e) {
+
+        this.el.menuAttach.removeClass('open');
+        document.removeEventListener('click', this.closeMenuAttach);
+
     }
 
 }
