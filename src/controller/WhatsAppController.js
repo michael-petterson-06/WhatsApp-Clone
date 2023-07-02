@@ -272,8 +272,18 @@ class WhatsAppController {
 
             // this.closeAllMainPanel();
             // this.el.panelMessagesContainer.show();
-            // this.el.inputPhoto.click();
+            this.el.inputPhoto.click();
             console.log('photo')
+
+        });
+
+        this.el.inputPhoto.on('change', event => {
+
+            [...this.el.inputPhoto.files].forEach(file => {
+                
+                // Message.sendImage(this._activeContact.chatId, this._user.email, file);
+
+            });
 
         });
 
@@ -281,28 +291,95 @@ class WhatsAppController {
         this.el.btnAttachCamera.on('click', event => {
 
             console.log('camera')
-            // this.closeAllMainPanel();
-            // this.el.panelMessagesContainer.hide();
-            // this.el.panelCamera.addClass('open');
+            this.closeAllMainPanel();
+            this.el.panelMessagesContainer.hide();
+            this.el.panelCamera.addClass('open');
             // this.el.panelCamera.sleep(100, () => {
             //     this.el.panelCamera.style.height = 'calc(100% - 120px)';
             // });
+            this.el.panelCamera.css({
+                'height': 'calc(100% - 120px)',
+            });
 
             // this._cameraController = new CameraController(this.el.videoCamera);
 
         });
 
 
-        this.el.btnAttachDocument.on('click', event => {
-            console.log('documento')
-            // this.el.inputDocument.click();
+        this.el.btnClosePanelCamera.on('click', event => {
+
+            // this._cameraController.stop();
+            this.closeAllMainPanel();
+            this.el.panelMessagesContainer.show();
 
         });
 
 
+        this.el.btnTakePicture.on('click', event => {
+
+            // let picture = this._cameraController.takePicture();
+
+            // this.el.pictureCamera.src = picture;
+            // this.el.pictureCamera.show();
+            // this.el.videoCamera.hide();
+            // this.el.btnReshootPanelCamera.show();
+            // this.el.containerSendPicture.show();
+            // this.el.containerTakePicture.hide();
+            console.log('take-picture')
+
+        });
+
+
+
+
+
+        this.el.btnAttachDocument.on('click', event => {
+            console.log('documento')
+            this.closeAllMainPanel()
+            // this.el.inputDocument.click();
+             this.el.panelDocumentPreview.addClass('open');
+             this.el.panelDocumentPreview.css({
+                'height': 'calc(100% - 120px)',
+            });
+
+
+        });
+
+        this.el.btnClosePanelDocumentPreview.on('click', event => {
+
+            this.closeAllMainPanel();
+            this.el.panelMessagesContainer.show();
+
+        });
+
+
+        this.el.btnSendDocument.on('click', event => {
+            console.log('send document')
+            // let documentFile = this.el.inputDocument.files[0];
+
+            // if (documentFile.type === 'application/pdf') {
+
+            //     Base64.toFile(this.el.imgPanelDocumentPreview.src).then(imageFile => {
+
+            //         Message.sendDocument(this._activeContact.chatId, this._user.email, documentFile, imageFile, this.el.infoPanelDocumentPreview.innerHTML);
+
+            //     });
+
+            // } else {
+
+            //     Message.sendDocument(this._activeContact.chatId, this._user.email, documentFile);
+
+            // }
+
+            // this.el.btnClosePanelDocumentPreview.click();
+
+        });
+
+
+
         this.el.btnAttachContact.on('click', event => {
 
-            console.log('contact')
+            this.el.modalContacts.show();
 
             // this._contactsController = new ContactsController(this.el.modalContacts, this._user);
 
@@ -315,6 +392,13 @@ class WhatsAppController {
             //     this._contactsController.close();
 
             // });
+
+        });
+
+        this.el.btnCloseModalContacts.on('click', event => {
+
+            this.el.modalContacts.hide();
+            // this._contactsController.close();
 
         });
 
@@ -332,6 +416,16 @@ class WhatsAppController {
 
         this.el.menuAttach.removeClass('open');
         document.removeEventListener('click', this.closeMenuAttach);
+
+    }
+
+    closeAllMainPanel() {
+
+        this.el.panelMessagesContainer.hide();
+
+        // this.el.panelDocumentPreview.style.height = '10%';
+        this.el.panelDocumentPreview.removeClass('open');
+        this.el.panelCamera.removeClass('open');
 
     }
 
