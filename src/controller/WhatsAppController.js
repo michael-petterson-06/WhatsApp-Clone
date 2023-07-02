@@ -93,30 +93,23 @@ class WhatsAppController {
 
       }
 
-    //   Element.prototype.sleep = function (duration, fn) {
+      HTMLFormElement.prototype.getForm = function () {
 
-    //       setTimeout(fn, duration);
-    //       return this;
+        return new FormData(this);
 
-    //   }
+      }
 
-    //   HTMLFormElement.prototype.getForm = function () {
+      HTMLFormElement.prototype.toJSON = function () {
 
-    //       return new FormData(this);
+        let json = {};
 
-    //   }
+        this.getForm().forEach((value, key) => {
+            json[key] = value;
+        });
 
-    //   HTMLFormElement.prototype.toJSON = function () {
+        return json;
 
-    //       let json = {};
-
-    //       this.getForm().forEach((value, key) => {
-    //           json[key] = value;
-    //       });
-
-    //       return json;
-
-    //   }
+       }
 
   }
 
@@ -168,6 +161,85 @@ class WhatsAppController {
             this.el.panelAddContact.removeClass('open')
 
         });
+
+
+        this.el.photoContainerEditProfile.on('click', event => {
+
+            this.el.inputProfilePhoto.click();
+
+        });
+
+      
+        this.el.inputNamePanelEditProfile.on('keypress', event => {
+
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                this.el.btnSavePanelEditProfile.click();
+            }
+
+        });
+
+
+        this.el.btnSavePanelEditProfile.on('click', event => {
+
+            // let name = this.el.inputNamePanelEditProfile.innerHTML;
+
+            // this._user.name = name;
+            // this._user.save().then(() => {
+
+            //     this.el.btnClosePanelEditProfile.click();
+
+            // });
+            console.log(this.el.inputNamePanelEditProfile.innerHTML)
+
+        });
+
+
+        this.el.formPanelAddContact.on('submit', event => {
+
+            event.preventDefault();
+
+            // let btn = this.el.formPanelAddContact.querySelector('[type="submit"]');
+
+            // btn.disabled = true;
+
+            // let email = this.el.formPanelAddContact.getForm().get('email');
+            // let contact = new User(email);
+
+            // contact.on('datachange', data => {
+
+            //     if (!data.name) {
+
+            //         let error = `O contato ${email} não foi encontrado.`;
+            //         console.error(error);
+
+            //     } else {
+
+            //         Chat.createIfNotExists(this._user.email, email).then(chat => {
+
+            //             contact.chatId = chat.id;
+
+            //             this._user.addContact(contact);
+
+            //             this._user.chatId = chat.id;
+
+            //             contact.addContact(this._user);
+
+            //             console.info(`O contato ${email} foi adicionado.`);
+            //             this.el.panelAddContact.hide();
+
+            //         });
+
+            //     }
+
+            //     btn.disabled = false;
+
+            // });
+
+        });
+
+
+     
     }
 
     closeAllLeftPanel() {
