@@ -482,19 +482,17 @@ class WhatsAppController {
 
             emoji.on('click', event => {
 
-                console.log(emoji.dataset.unicode)
+                let img = this.el.imgEmojiDefault.cloneNode();
 
-                // let img = this.el.imgEmojiDefault.cloneNode();
+                img.style.cssText = emoji.style.cssText;
+                img.dataset.unicode = emoji.dataset.unicode;
+                img.alt = emoji.dataset.unicode;
 
-                // img.style.cssText = emoji.style.cssText;
-                // img.dataset.unicode = emoji.dataset.unicode;
-                // img.alt = emoji.dataset.unicode;
+                emoji.classList.forEach(cls => {
 
-                // emoji.classList.forEach(cls => {
+                    img.classList.add(cls);
 
-                //     img.classList.add(cls);
-
-                // });
+                });
 
                 // //Retorna parte do texto selecionada pelo usuário ou a posição atual do cursor.
                 // let cursor = window.getSelection();
@@ -519,8 +517,9 @@ class WhatsAppController {
                 // range.insertNode(frag);
                 // //coloca o cursor após a imagem                    
                 // range.setStartAfter(img);
-
-                // this.el.inputText.dispatchEvent(new Event('keyup'));
+                this.el.inputText.appendChild(img);
+                //Força o playceholder desapareçer
+                this.el.inputText.dispatchEvent(new Event('keyup'));
 
             });
 
