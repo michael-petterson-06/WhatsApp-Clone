@@ -1,4 +1,4 @@
-class CameraController {
+export class CameraController {
 
     constructor(videoEl){
 
@@ -8,7 +8,8 @@ class CameraController {
 
             // this._stream = stream;
             //Acha o caminho da camera
-            this._videoEl.src = URL.createObjectURL(stream);
+            // this._videoEl.src = URL.createObjectURL(stream);
+            this._videoEl.srcObject = stream;
             //Mostra a camera
             this._videoEl.play();
 

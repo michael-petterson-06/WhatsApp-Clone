@@ -1,4 +1,4 @@
-class Format {
+export class Format {
 
     //Não precisa de construtor porque só vou cirar métodos estáticos
     static getCamelcase(text) {
