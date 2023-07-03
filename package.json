@@ -1,0 +1,25 @@
+{
+  "name": "y",
+  "version": "1.0.0",
+  "description": "Projeto clonando whats-app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --config webpack.config.js",
+    "start": "webpack-dev-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michael-petterson-06/WhatsApp-Clone.git"
+  },
+  "author": "Michael Petterson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/michael-petterson-06/WhatsApp-Clone/issues"
+  },
+  "homepage": "https://github.com/michael-petterson-06/WhatsApp-Clone#readme",
+  "dependencies": {
+    "webpack": "^3.1.0",
+    "webpack-dev-server": "^2.5.1"
+  }
+}
