@@ -22,20 +22,21 @@ export class CameraController {
 
     }
 
-    // takePicture(mimeType = 'image/png'){
+    takePicture(mimeType = 'image/png'){
 
-    //     let canvas = document.createElement('canvas');
+        let canvas = document.createElement('canvas');
 
-    //     canvas.setAttribute('height', this._videoEl.videoHeight);
-    //     canvas.setAttribute('width', this._videoEl.videoWidth);
+        canvas.setAttribute('height', this._videoEl.videoHeight);
+        canvas.setAttribute('width', this._videoEl.videoWidth);
 
-    //     let context = canvas.getContext('2d');
+        let context = canvas.getContext('2d');
 
-    //     context.drawImage(this._videoEl, 0, 0, canvas.width, canvas.height);
+        context.drawImage(this._videoEl, 0, 0, canvas.width, canvas.height);
 
-    //     return canvas.toDataURL(mimeType);
+        //Transformar o canvas em base64
+        return canvas.toDataURL(mimeType);
 
-    // }
+    }
 
     stop(){
 
