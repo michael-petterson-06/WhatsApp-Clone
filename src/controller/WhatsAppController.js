@@ -290,9 +290,9 @@ class WhatsAppController {
 
         this.el.btnAttachCamera.on('click', event => {
 
-            console.log('camera')
+            
             this.closeAllMainPanel();
-            this.el.panelMessagesContainer.hide();
+            // this.el.panelMessagesContainer.hide();
             this.el.panelCamera.addClass('open');
             // this.el.panelCamera.sleep(100, () => {
             //     this.el.panelCamera.style.height = 'calc(100% - 120px)';
@@ -302,6 +302,8 @@ class WhatsAppController {
             });
 
             // this._cameraController = new CameraController(this.el.videoCamera);
+            this._camera = new CameraController(this.el.videoCamera);
+
 
         });
 
