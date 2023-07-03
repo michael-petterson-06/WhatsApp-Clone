@@ -1,5 +1,6 @@
 import { Format } from './../util/Format';
 import { CameraController } from './CameraController';
+import { DocumentPreviewController } from './DocumentPreviewController';
 
 export class WhatsAppController {
   
@@ -313,7 +314,7 @@ export class WhatsAppController {
 
         this.el.btnClosePanelCamera.on('click', event => {
 
-            // this._cameraController.stop();
+            this._camera.stop();
             this.closeAllMainPanel();
             this.el.panelMessagesContainer.show();
 
@@ -322,15 +323,63 @@ export class WhatsAppController {
 
         this.el.btnTakePicture.on('click', event => {
 
-            // let picture = this._cameraController.takePicture();
+            let picture = this._camera.takePicture();
 
-            // this.el.pictureCamera.src = picture;
-            // this.el.pictureCamera.show();
-            // this.el.videoCamera.hide();
-            // this.el.btnReshootPanelCamera.show();
-            // this.el.containerSendPicture.show();
-            // this.el.containerTakePicture.hide();
-            console.log('take-picture')
+            this.el.pictureCamera.src = picture;
+            this.el.pictureCamera.show();
+            this.el.videoCamera.hide();
+            this.el.btnReshootPanelCamera.show();
+            this.el.containerSendPicture.show();
+            this.el.containerTakePicture.hide();
+        });
+
+        this.el.btnReshootPanelCamera.on('click', event => {
+
+            this.el.btnReshootPanelCamera.hide();
+            this.el.pictureCamera.hide();
+            this.el.videoCamera.show();
+            this.el.containerSendPicture.hide();
+            this.el.containerTakePicture.show();
+
+        });
+
+
+        this.el.btnSendPicture.on('click', event => {
+
+            console.log( this.el.pictureCamera.src)
+            // this.el.btnSendPicture.disabled = true;
+
+            // let picture = new Image();
+            // picture.src = this.el.pictureCamera.src;
+            // picture.onload = () => {
+
+            //     let canvas = document.createElement('canvas');
+            //     let context = canvas.getContext('2d');
+
+            //     canvas.setAttribute('width', picture.width);
+            //     canvas.setAttribute('height', picture.height);
+
+            //     context.translate(picture.width, 0);
+            //     context.scale(-1, 1);
+            //     context.drawImage(picture, 0, 0, canvas.width, canvas.height);
+
+            //     Base64.toFile(canvas.toDataURL(Base64.getMimeType(this.el.pictureCamera.src))).then(file => {
+
+            //         Message.sendImage(this._activeContact.chatId, this._user.email, file);
+
+            //         this.closeAllMainPanel();
+            //         this._cameraController.stop();
+            //         this.el.btnReshootPanelCamera.hide();
+            //         this.el.pictureCamera.hide();
+            //         this.el.videoCamera.show();
+            //         this.el.containerSendPicture.hide();
+            //         this.el.containerTakePicture.show();
+            //         this.el.panelMessagesContainer.show();
+            //         this.el.btnSendPicture.disabled = false;
+
+            //     });
+
+            // };
 
         });
 
@@ -338,15 +387,98 @@ export class WhatsAppController {
 
 
 
+
         this.el.btnAttachDocument.on('click', event => {
-            console.log('documento')
+            
             this.closeAllMainPanel()
-            // this.el.inputDocument.click();
+            this.el.inputDocument.click();
              this.el.panelDocumentPreview.addClass('open');
              this.el.panelDocumentPreview.css({
                 'height': 'calc(100% - 120px)',
             });
 
+        });
+
+
+        this.el.inputDocument.on('change', event => {
+
+            if (this.el.inputDocument.files.length) {
+
+
+                this.el.panelDocumentPreview.css({
+                    'height': '1%'
+                });
+
+                let file = this.el.inputDocument.files[0];
+
+                // this.closeAllMainPanel();
+                // this.el.panelMessagesContainer.hide();
+                // this.el.panelDocumentPreview.addClass('open');
+                // this.el.panelDocumentPreview.sleep(500, () => {
+                //     this.el.panelDocumentPreview.style.height = 'calc(100% - 120px)';
+                // });
+               
+
+
+                this._documentPreviewController = new DocumentPreviewController(file);
+
+                this._documentPreviewController.getPreviewData().then(result => {
+                   
+                    this.el.filePanelDocumentPreview.hide();
+                    this.el.imagePanelDocumentPreview.show();
+                    this.el.imgPanelDocumentPreview.src = result.src;
+                    // this.el.imgPanelDocumentPreview.show();
+
+                    this.el.infoPanelDocumentPreview.innerHTML = result.info;
+                    this.el.panelDocumentPreview.css({
+                        'height': 'calc(100% - 120px)',
+                    });
+        
+                    
+
+                }).catch(err => {
+                    this.el.panelDocumentPreview.css({
+                        'height': 'calc(100% - 120px)',
+                    });
+        
+                  
+                    // if (event.error) {
+                    //     console.error(event.event);
+                    // } else {
+                      
+
+                        switch (file.type) {
+                            case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+                            case 'application/msword':
+                            case 'application/vnd.oasis.opendocument.text':
+                                this.el.iconPanelDocumentPreview.classList.value = 'jcxhw icon-doc-doc';
+                                break;
+
+                            case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                            case 'application/vnd.ms-excel':
+                            case 'application/vnd.oasis.opendocument.spreadsheet':
+                                this.el.iconPanelDocumentPreview.classList.value = 'jcxhw icon-doc-xls';
+                                break;
+
+                            case 'application/vnd.ms-powerpoint':
+                            case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+                                this.el.iconPanelDocumentPreview.classList.value = 'jcxhw icon-doc-ppt';
+                                break;
+
+                            default:
+                                this.el.iconPanelDocumentPreview.classList.value = 'jcxhw icon-doc-generic';
+                        }
+
+                        this.el.filePanelDocumentPreview.show();
+                        this.el.imagePanelDocumentPreview.hide();
+                       
+                        this.el.filenamePanelDocumentPreview.innerHTML = file.name;
+
+                    // }
+
+                });
+
+            }
 
         });
 
