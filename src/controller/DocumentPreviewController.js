@@ -1,7 +1,7 @@
-// var pdfjsLib = require('pdfjs-dist');
-// var path = require('path');
+var pdfjsLib = require('pdfjs-dist');
+var path = require('path');
 
-// pdfjsLib.GlobalWorkerOptions.workerSrc = path.resolve(__dirname, '../../dist/pdf.worker.bundle.js');
+pdfjsLib.GlobalWorkerOptions.workerSrc = path.resolve(__dirname, '../../dist/pdf.worker.bundle.js');
 
 export class DocumentPreviewController {
 
@@ -15,7 +15,7 @@ export class DocumentPreviewController {
 
         return new Promise((resolve, reject)=>{
 
-            // let reader = new FileReader();
+            let reader = new FileReader();
 
             // reader.onerror = event => {
 
@@ -32,7 +32,7 @@ export class DocumentPreviewController {
                 case 'image/jpeg':
                 case 'image/jpg':
                 case 'image/gif':
-                    let reader = new FileReader();
+                    
                     reader.onload = e => {
 
                         resolve({
@@ -54,48 +54,71 @@ export class DocumentPreviewController {
 
                 case 'application/pdf':
 
-                    // reader.onload = event => {
+                    reader.onload = event => {
 
-                    //     pdfjsLib.getDocument(new Uint8Array(reader.result)).then(pdf => {
+                        pdfjsLib.getDocument(new Uint8Array(reader.result)).then(pdf => {
+                   
+                            pdf.getPage(1).then(page => {
+                                
+                                let viewport = page.getViewport(1);
 
-                    //         pdf.getPage(1).then(page => {
+                                let canvas = document.createElement('canvas');
+                                let canvasContext = canvas.getContext('2d');
 
-                    //             let viewport = page.getViewport(1);
+                                canvas.height = viewport.height;
+                                canvas.width = viewport.width;
 
-                    //             let canvas = document.createElement('canvas');
-                    //             let canvasContext = canvas.getContext('2d');
+                                page.render({
+                                    canvasContext,
+                                    viewport
+                                }).then(() => {
 
-                    //             canvas.height = viewport.height;
-                    //             canvas.width = viewport.width;
+                                    let s = (pdf.numPages > 1) ? 's' : '';
 
-                    //             page.render({
-                    //                 canvasContext,
-                    //                 viewport
-                    //             }).then(() => {
+                                    resolve({
+                                        src: canvas.toDataURL('image/png'),
+                                        info: `${pdf.numPages} página${s}`
+                                    });
 
-                    //                 let s = (pdf.numPages > 1) ? 's' : '';
+                                }).catch(err => {
 
-                    //                 resolve({
-                    //                     src: canvas.toDataURL('image/png'),
-                    //                     info: `${pdf.numPages} página${s}`
-                    //                 });
+                                    // reject({
+                                    //     error: true,
+                                    //     event
+                                    // });
+                                    reject({
+                                        err,
+                                    });
+        
+                                });  
 
-                    //             });
+                            }).catch(err => {
 
-                    //         });
+                                // reject({
+                                //     error: true,
+                                //     event
+                                // });
+                                reject({
+                                    err,
+                                });
+    
+                            });  
 
-                    //     }).catch(event => {
+                        }).catch(err => {
 
-                    //         reject({
-                    //             error: true,
-                    //             event
-                    //         });
+                            // reject({
+                            //     error: true,
+                            //     event
+                            // });
+                            reject({
+                                err,
+                            });
 
-                    //     });                   
+                        });                   
 
-                    // };
+                    };
 
-                    // reader.readAsArrayBuffer(this._file);
+                    reader.readAsArrayBuffer(this._file);
 
                     break;
 
