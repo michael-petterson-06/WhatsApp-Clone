@@ -494,30 +494,30 @@ class WhatsAppController {
 
                 });
 
-                // //Retorna parte do texto selecionada pelo usuário ou a posição atual do cursor.
-                // let cursor = window.getSelection();
+                //Retorna parte do texto selecionada pelo usuário ou a posição atual do cursor.
+                let cursor = window.getSelection();
 
-                // //Se o cursor não estiver focado no campo de input, forçamos o focus
-                // if (!cursor.focusNode || cursor.focusNode.id !== 'input-text') {
-                //     this.el.inputText.focus();
-                //     cursor = window.getSelection();
-                // }
+                //Se o cursor não estiver focado no campo de input, forçamos o focus
+                if (!cursor.focusNode || cursor.focusNode.id !== 'input-text') {
+                    this.el.inputText.focus();
+                    cursor = window.getSelection();
+                }
 
-                // //Cria um novo objeto de controle de intervalos
-                // let range = document.createRange();
-                // //Retorna o intervalo atual do cursor
-                // range = cursor.getRangeAt(0);
-                // //Remove o conteúdo selecionado
-                // range.deleteContents();
-                // //Cria um fragmento de Documento
-                // var frag = document.createDocumentFragment();
-                // //Adiciona a imagem no fragmento
-                // frag.appendChild(img);
-                // //inserir o fragmento no intervalo
-                // range.insertNode(frag);
-                // //coloca o cursor após a imagem                    
-                // range.setStartAfter(img);
-                this.el.inputText.appendChild(img);
+                //Cria um novo objeto de controle de intervalos
+                let range = document.createRange();
+                //Retorna o intervalo atual do cursor
+                range = cursor.getRangeAt(0);
+                //Remove o conteúdo selecionado
+                range.deleteContents();
+                //Cria um fragmento de Documento
+                var frag = document.createDocumentFragment();
+                //Adiciona a imagem no fragmento
+                frag.appendChild(img);
+                //inserir o fragmento no intervalo
+                range.insertNode(frag);
+                //coloca o cursor após a imagem                    
+                range.setStartAfter(img);
+              
                 //Força o playceholder desapareçer
                 this.el.inputText.dispatchEvent(new Event('keyup'));
 
