@@ -313,7 +313,7 @@ export class WhatsAppController {
 
         this.el.btnClosePanelCamera.on('click', event => {
 
-            // this._cameraController.stop();
+            this._camera.stop();
             this.closeAllMainPanel();
             this.el.panelMessagesContainer.show();
 
