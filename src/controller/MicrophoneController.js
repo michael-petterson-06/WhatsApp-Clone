@@ -1,12 +1,13 @@
 // import { Format } from './../util/Format';
-// import { ClassEvent } from './../util/ClassEvent';
+import { ClassEvent } from './../util/ClassEvent';
 
-// export class MicrophoneController extends ClassEvent {
-  export class MicrophoneController  {
+export class MicrophoneController extends ClassEvent {
+  
     
     constructor(){
-
-        // super();
+        // "Super()" Chama o construtor do pai, nesse caso ClassEvent
+        //Assim ele usa todos os this e métodos do pai (herança)
+        super(); 
 
         // this._available = false;
 
@@ -27,6 +28,7 @@
             //     sream: this._stream,
             //     audio: this._audio
             // });
+            this.trigger('play', audio);
 
         }).catch(err => {
 
