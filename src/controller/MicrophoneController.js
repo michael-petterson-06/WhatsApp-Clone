@@ -9,26 +9,28 @@ export class MicrophoneController extends ClassEvent {
         //Assim ele usa todos os this e métodos do pai (herança)
         super(); 
 
-        // this._available = false;
+        this._mimeType = 'audio/webm';
+
+        this._available = false;
 
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
 
-            // this._available = true;
+            this._available = true;
            
             this._stream = stream;
 
-            let audio = new Audio();
+            // let audio = new Audio();
 
             // this._videoEl.src = URL.createObjectURL(stream) Depreciativo
-            audio.srcObject = stream;
+            // audio.srcObject = stream;
 
-            audio.play();
+            // audio.play();
 
             // this.trigger('ready', {
             //     sream: this._stream,
             //     audio: this._audio
             // });
-            this.trigger('play', audio);
+            this.trigger('ready', this._stream);
 
         }).catch(err => {
 
@@ -37,18 +39,6 @@ export class MicrophoneController extends ClassEvent {
         });
 
     }
-
-    // stopRecorder(){
-
-    //     if (this._available) {
-        
-    //         this._mediaRecorder.stop();
-    //         this.stop();
-    //         this.stopTimer();
-
-    //     }
-
-    // }
 
     // stopTimer(){
 
@@ -70,58 +60,95 @@ export class MicrophoneController extends ClassEvent {
 
     // }
 
-    // startRecorder(options = {}){
+    startRecorder(options = {}){
 
-    //     if (this._available) {
+        // if (this._available) {
+        if ( this.isAvailable()) {
 
-    //         this.startTimer();
+            // this.startTimer();
 
-    //         this._mediaRecorder = new MediaRecorder(this._stream, Object.assign(options, {
-    //             mimeType: 'audio/webm'
-    //         }));
+            // this._mediaRecorder = new MediaRecorder(this._stream, Object.assign(options, {
+            //     mimeType: 'audio/webm'
+            // }));
+            this._mediaRecorder = new MediaRecorder(this._stream,  {
+                mimeType: this._mimeType,
+            });
 
-    //         this._recordedChunks = [];
+            this._recordedChunks = [];
 
-    //         this._mediaRecorder.addEventListener('dataavailable', e => {
+            this._mediaRecorder.addEventListener('dataavailable', e => {
 
-    //             if (e.data.size > 0) this._recordedChunks.push(e.data);
+                if (e.data.size > 0) this._recordedChunks.push(e.data);
 
-    //         });
+            });
 
-    //         this._mediaRecorder.addEventListener('stop', () => {
+            this._mediaRecorder.addEventListener('stop', e => {
 
-    //             let blob = new Blob(this._recordedChunks, {
-    //                 type: 'audio/webm'
-    //             });
+                let blob = new Blob(this._recordedChunks, {
+                    type: this._mimeType
+                });
 
-    //             let cx = new AudioContext();
+                // let cx = new AudioContext();
 
-    //             var fileReader = new FileReader();
-                
-    //             fileReader.onload = e => {
+                // var fileReader = new FileReader();
 
-    //                 cx.decodeAudioData(fileReader.result).then(decode => {
+                let filename = `rec${Date.now()}.webm`;
+                let file = new File([blob], filename, {
+                    type: this._mimeType,
+                    lastModified: Date.now()
+                });
+                console.log('file', file)
 
-    //                     let file = new File([blob], 'rec' + new Date().getTime() + '.webm', {
-    //                         type: 'audio/webm',
-    //                         lastModified: Date.now()
-    //                     });
+                let reader = new FileReader();
 
-    //                     this.trigger('recorded', file, decode);
 
-    //                 });
+                     reader.onload = e => {
 
-    //             };
+                        let audio = new Audio(reader.result)
+                        audio.play()
+                        
+                    };
 
-    //             fileReader.readAsArrayBuffer(blob);                
+                    reader.readAsDataURL(file)
 
-    //         });
+                // fileReader.onload = e => {
 
-    //         this._mediaRecorder.start();
+                //     cx.decodeAudioData(fileReader.result).then(decode => {
 
-    //     }
+                //         let file = new File([blob], 'rec' + new Date().getTime() + '.webm', {
+                //             type: 'audio/webm',
+                //             lastModified: Date.now()
+                //         });
 
-    // }
+                //         this.trigger('recorded', file, decode);
+
+                //     });
+
+                // };
+
+                // fileReader.readAsArrayBuffer(blob);                
+
+            });
+
+            this._mediaRecorder.start();
+
+        }
+
+    }
+
+
+    stopRecorder(){
+
+        // if (this._available) {
+            if ( this.isAvailable()) {
+        
+            this._mediaRecorder.stop();
+            this.stop();
+            // this.stopTimer();
+
+        }
+
+    }
 
     // play(){
 
@@ -141,6 +168,11 @@ export class MicrophoneController extends ClassEvent {
     //     }
 
     // }
+
+    //Verifica se usuário permitiu o audio ou não
+    isAvailable() {
+        return this._available;
+    }
 
     stop(){
 
