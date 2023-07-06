@@ -1,6 +1,8 @@
+//Ferramenta para ter acesso ao worker
 var pdfjsLib = require('pdfjs-dist');
 var path = require('path');
 
+//para ler arquivos pdf
 pdfjsLib.GlobalWorkerOptions.workerSrc = path.resolve(__dirname, '../../dist/pdf.worker.bundle.js');
 
 export class DocumentPreviewController {
