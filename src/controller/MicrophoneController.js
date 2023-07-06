@@ -8,7 +8,7 @@ export class MicrophoneController extends ClassEvent {
         // "Super()" Chama o construtor do pai, nesse caso ClassEvent
         //Assim ele usa todos os this e métodos do pai (herança)
         super(); 
-
+        
         this._mimeType = 'audio/webm';
 
         this._available = false;
@@ -31,6 +31,7 @@ export class MicrophoneController extends ClassEvent {
             //     sream: this._stream,
             //     audio: this._audio
             // });
+            
             this.trigger('ready', this._stream);
 
         }).catch(err => {
@@ -48,7 +49,7 @@ export class MicrophoneController extends ClassEvent {
     }
 
     startTimer(){
-
+        
         let start = Date.now();
 
         this._recordMicrophoneInterval = setInterval(() => {
@@ -83,8 +84,8 @@ export class MicrophoneController extends ClassEvent {
 
 
     startRecorder(options = {}){
-
-        // if (this._available) {
+        
+       // if (this._available) {
         if ( this.isAvailable()) {
 
             // this.startTimer();
@@ -163,7 +164,7 @@ export class MicrophoneController extends ClassEvent {
 
 
     stopRecorder(){
-
+        
         // if (this._available) {
             if ( this.isAvailable()) {
         

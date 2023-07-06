@@ -2,6 +2,7 @@ import { Format } from './../util/Format';
 import { CameraController } from './CameraController';
 import { MicrophoneController } from './MicrophoneController';
 import { DocumentPreviewController } from './DocumentPreviewController';
+import { Firebase } from './../util/Firebase';
 
 export class WhatsAppController {
   
@@ -11,6 +12,7 @@ export class WhatsAppController {
         this.elementsPrototype();
         this.loadElements();
         this.initEvents();
+        this._firebase = new Firebase();
     }
 
     loadElements() {
@@ -26,6 +28,7 @@ export class WhatsAppController {
 
     }
 
+    
 
     elementsPrototype() {
 
@@ -347,7 +350,6 @@ export class WhatsAppController {
 
         this.el.btnSendPicture.on('click', event => {
 
-            console.log( this.el.pictureCamera.src)
             // this.el.btnSendPicture.disabled = true;
 
             // let picture = new Image();
@@ -383,11 +385,6 @@ export class WhatsAppController {
             // };
 
         });
-
-
-
-
-
 
         this.el.btnAttachDocument.on('click', event => {
             
@@ -541,7 +538,7 @@ export class WhatsAppController {
         });
 
         this.el.btnSendMicrophone.on('click', event => {
-
+           
             this.el.recordMicrophone.show();
             this.el.btnSendMicrophone.hide();
 
@@ -549,21 +546,18 @@ export class WhatsAppController {
 
             this._microphoneController = new MicrophoneController();
 
+                            
             
-
             this._microphoneController.on('ready', musica => {
+             
                 this._microphoneController.startRecorder();
-                console.log('reade event')
-
-                this._microphoneController.on('recordtimer', timer => {
-                
-                    this.el.recordMicrophoneTimer.innerHTML = Format.toTime(timer);
-
-                // Message.sendAudio(this._activeContact.chatId, this._user.email, file, metadata, this._user.photo);
-
             });
 
+            this._microphoneController.on('recordtimer', timer => {
                 
+                this.el.recordMicrophoneTimer.innerHTML = Format.toTime(timer);
+
+                // Message.sendAudio(this._activeContact.chatId, this._user.email, file, metadata, this._user.photo);
 
             });
 

@@ -7,7 +7,7 @@ export class ClassEvent {
   }
 
   on(name, fn) {
-
+    
       if (!this._events[name]) this._events[name] = new Array();
 
       this._events[name].push(fn);
