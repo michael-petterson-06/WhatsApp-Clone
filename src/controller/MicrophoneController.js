@@ -13,6 +13,7 @@ export class MicrophoneController extends ClassEvent {
 
         this._available = false;
 
+        //Ativando microfone
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
 
             this._available = true;
@@ -40,25 +41,46 @@ export class MicrophoneController extends ClassEvent {
 
     }
 
-    // stopTimer(){
+    stopTimer(){
 
-    //     clearInterval(this._recordMicrophoneInterval);
+        clearInterval(this._recordMicrophoneInterval);
 
-    // }
+    }
 
-    // startTimer(){
+    startTimer(){
 
-    //     let start = Date.now();
+        let start = Date.now();
 
-    //     this._recordMicrophoneInterval = setInterval(() => {
+        this._recordMicrophoneInterval = setInterval(() => {
 
-    //         this.trigger('timer', {
-    //             displayTimer: Format.toTime(Date.now() - start)
-    //         });
+            // this.trigger('recordtimer', {
+            //     displayTimer: Format.toTime(Date.now() - start)
+            // });
 
-    //     }, 100);
 
-    // }
+            this.trigger('recordtimer', (Date.now() - start));
+
+
+        }, 100);
+
+    }
+
+    stop(){
+
+        // if (this._available) {
+
+            this._stream.getTracks().forEach(track => {
+
+                track.stop();
+
+            });
+
+            // this.trigger('stop');
+
+        // }
+
+    }
+
 
     startRecorder(options = {}){
 
@@ -70,6 +92,8 @@ export class MicrophoneController extends ClassEvent {
             // this._mediaRecorder = new MediaRecorder(this._stream, Object.assign(options, {
             //     mimeType: 'audio/webm'
             // }));
+
+            //Gravando microfone
             this._mediaRecorder = new MediaRecorder(this._stream,  {
                 mimeType: this._mimeType,
             });
@@ -131,6 +155,7 @@ export class MicrophoneController extends ClassEvent {
             });
 
             this._mediaRecorder.start();
+            this.startTimer();
 
         }
 
@@ -144,7 +169,7 @@ export class MicrophoneController extends ClassEvent {
         
             this._mediaRecorder.stop();
             this.stop();
-            // this.stopTimer();
+            this.stopTimer();
 
         }
 
@@ -173,21 +198,5 @@ export class MicrophoneController extends ClassEvent {
     isAvailable() {
         return this._available;
     }
-
-    stop(){
-
-        // if (this._available) {
-
-            this._stream.getTracks().forEach(track => {
-
-                track.stop();
-
-            });
-
-            // this.trigger('stop');
-
-        // }
-
-    }
-
+   
 }
