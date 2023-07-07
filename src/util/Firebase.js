@@ -8,12 +8,13 @@ export class Firebase {
 
 
       this._config = {
-        apiKey: "AIzaSyA8zcIf3tRFLcIB5AvydbAIAMI1iX7zXVs",
-        authDomain: "whtas-app-clone-db7b1.firebaseapp.com",
-        projectId: "whtas-app-clone-db7b1",
-        storageBucket: "whtas-app-clone-db7b1.appspot.com",
-        messagingSenderId: "251769200306",
-        appId: "1:251769200306:web:7a3cd5b8b40fafb6b3b3ab"
+        apiKey: "AIzaSyA4BjqmuMhMgyPbNXUOLppQDPaNtcA2B9o",
+        authDomain: "whtas-app-clone-6628e.firebaseapp.com",
+        projectId: "whtas-app-clone-6628e",
+        storageBucket: "whtas-app-clone-6628e.appspot.com",
+        messagingSenderId: "216701029796",
+        appId: "1:216701029796:web:512e270c0a49bd84b28531",
+        measurementId: "G-5WD0TTDF0D"
     };
        this.init();
 
@@ -21,7 +22,7 @@ export class Firebase {
 
     init(){
 
-        if (!this._initialized) {
+        if (!window._initializedFirebase) {
          
            // Initialize Firebase
            firebase.initializeApp(this._config);
@@ -30,33 +31,33 @@ export class Firebase {
                 timestampsInSnapshots: true
             });
             
-            this._initialized = true  
+            window._initializedFirebase = true  
              
          }
     }
 
-    // initAuth(){
+    initAuth(){
 
-    //     return new Promise((resolve, reject)=>{
+        return new Promise((resolve, reject)=>{
 
-    //         let provider = new firebase.auth.GoogleAuthProvider();
+            let provider = new firebase.auth.GoogleAuthProvider();
 
-    //         firebase.auth().signInWithPopup(provider).then(function (result) {
+            firebase.auth().signInWithPopup(provider).then(function (result) {
 
-    //             let token = result.credential.accessToken;
-    //             let user = result.user;
+                let token = result.credential.accessToken;
+                let user = result.user;
 
-    //             resolve(user, token);
+                resolve({user, token});
 
-    //         }).catch(function (error) {
+            }).catch(function (error) {
 
-    //             reject(error);
+                reject(error);
 
-    //         });
+            });
 
-    //     });        
+        });        
 
-    // }
+    }
 
     static db(){
 
