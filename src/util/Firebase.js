@@ -35,28 +35,28 @@ export class Firebase {
          }
     }
 
-    // initAuth(){
+    initAuth(){
 
-    //     return new Promise((resolve, reject)=>{
+        return new Promise((resolve, reject)=>{
 
-    //         let provider = new firebase.auth.GoogleAuthProvider();
+            let provider = new firebase.auth.GoogleAuthProvider();
 
-    //         firebase.auth().signInWithPopup(provider).then(function (result) {
+            firebase.auth().signInWithPopup(provider).then(function (result) {
 
-    //             let token = result.credential.accessToken;
-    //             let user = result.user;
+                let token = result.credential.accessToken;
+                let user = result.user;
 
-    //             resolve(user, token);
+                resolve({user, token});
 
-    //         }).catch(function (error) {
+            }).catch(function (error) {
 
-    //             reject(error);
+                reject(error);
 
-    //         });
+            });
 
-    //     });        
+        });        
 
-    // }
+    }
 
     static db(){
 
