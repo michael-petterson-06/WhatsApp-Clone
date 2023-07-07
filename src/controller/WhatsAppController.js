@@ -232,15 +232,17 @@ export class WhatsAppController {
 
         this.el.btnSavePanelEditProfile.on('click', event => {
 
-            // let name = this.el.inputNamePanelEditProfile.innerHTML;
+            let name = this.el.inputNamePanelEditProfile.innerHTML;
+            this.el.btnSavePanelEditProfile.disabled = true;
 
-            // this._user.name = name;
-            // this._user.save().then(() => {
+            this._user.name = name;
+            this._user.save().then(() => {
 
-            //     this.el.btnClosePanelEditProfile.click();
+                this.el.btnSavePanelEditProfile.disabled = false;
+                this.el.btnClosePanelEditProfile.click();
 
-            // });
-            console.log(this.el.inputNamePanelEditProfile.innerHTML)
+            });
+       
 
         });
 
