@@ -1,45 +1,73 @@
 // import { Model } from './../util/Model'
-import { ClassEvent } from "../util/ClassEvent";
+import { Model } from './Model'
 import { Firebase } from './../util/Firebase'
 
-// export class User extends Model {
-export class User extends ClassEvent {
+export class User extends Model {
+// export class User extends ClassEvent {
 
-    // get name() { return this._data.name; }
-    // set name(value) { this._data.name = value; }
+    constructor(id){
+        
+        super();
+        
+        if(id) this.getById(id);
 
-    // get email() { return this._data.email; }
-    // set email(value) { this._data.email = value; }
+    }
+    get name() { return this._data.name; }
+    set name(value) { this._data.name = value; }
 
-    // get photo() { return this._data.photo; }
-    // set photo(value) { this._data.photo = value; }
+    get email() { return this._data.email; }
+    set email(value) { this._data.email = value; }
+
+    get photo() { return this._data.photo; }
+    set photo(value) { this._data.photo = value; }
 
     // get chatId() { return this._data.chatId; }
     // set chatId(value) { this._data.chatId = value; }
 
+    getById(id){
+        return new Promise((s, f)=>{
+
+            User.findByEmail(id).onSnapshot(doc => {
+
+                this.fromJSON(doc.data());
+
+                s(doc);
+
+                // this.trigger('contactschange', contacts);
+
+            })
+        });        
+    }
+
     static getRef(){
-        return Firebase.db().collection('users');
+        return Firebase.db().collection('/users');
     }
            
     static findByEmail(email){
         return User.getRef().doc(email);
     }
 
-    // constructor(key){
+    save(){
+
+        return User.findByEmail(this.email).set(this.toJSON());
+
+    }
+
+    // constructor(id){
         
     //     // super();
 
-    //     // this.key = key;
+    //     // this.id = id;
 
-    //     // this.getByKey();
+    //     // this.getByid();
 
     // }
 
-    // getByKey(){
+    // getByid(){
 
     //     return new Promise((s, f)=>{
 
-    //         User.getRef().doc(this.key).onSnapshot(doc => {
+    //         User.getRef().doc(this.id).onSnapshot(doc => {
 
     //             this.doc = doc;
 
@@ -53,15 +81,11 @@ export class User extends ClassEvent {
 
     // }
 
-    // save(){
-
-    //     return User.getRef().doc(this.key).set(this.toJSON());
-
-    // }
+   
 
     // addContact(contact){
 
-    //     return User.getRef().doc(this.key).collection('contacts').doc(contact.email).set(contact.toJSON());
+    //     return User.getRef().doc(this.id).collection('contacts').doc(contact.email).set(contact.toJSON());
 
     // }
 
@@ -69,14 +93,14 @@ export class User extends ClassEvent {
 
     //     return new Promise((s, f)=>{
 
-    //         User.getRef().doc(this.key).collection('contacts').onSnapshot(docs => {
+    //         User.getRef().doc(this.id).collection('contacts').onSnapshot(docs => {
 
     //             let contacts = [];
 
     //             docs.forEach(doc=>{
 
     //                 let data = doc.data();
-    //                 data._key = doc.key;
+    //                 data._id = doc.id;
     //                 contacts.push(data);
 
     //             });
