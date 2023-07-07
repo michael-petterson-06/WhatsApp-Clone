@@ -251,42 +251,47 @@ export class WhatsAppController {
 
             event.preventDefault();
 
+            // let formData = new FormData(this.el.formPanelAddContact);
+            
             // let btn = this.el.formPanelAddContact.querySelector('[type="submit"]');
 
             // btn.disabled = true;
 
-            // let email = this.el.formPanelAddContact.getForm().get('email');
-            // let contact = new User(email);
+            let email = this.el.formPanelAddContact.getForm().get('email');
+            let contact = new User(email);
 
-            // contact.on('datachange', data => {
+            contact.on('datachange', data => {
 
-            //     if (!data.name) {
+                if (!data.name) {
 
-            //         let error = `O contato ${email} não foi encontrado.`;
-            //         console.error(error);
+                    let error = `O contato ${email} não foi encontrado.`;
+                    console.error(error);
 
-            //     } else {
+                } else {
 
-            //         Chat.createIfNotExists(this._user.email, email).then(chat => {
+                    // Chat.createIfNotExists(this._user.email, email).then(chat => {
 
-            //             contact.chatId = chat.id;
+                    //     contact.chatId = chat.id;
 
-            //             this._user.addContact(contact);
+                        this._user.addContact(contact).then(() => {
+                            this.el.btnClosePanelAddContact.click();
+                            console.info(`O contato ${email} foi adicionado.`);
+                            // this.el.panelAddContact.hide();
+                        });
 
-            //             this._user.chatId = chat.id;
+                        // this._user.chatId = chat.id;
 
-            //             contact.addContact(this._user);
+                        // contact.addContact(this._user);
 
-            //             console.info(`O contato ${email} foi adicionado.`);
-            //             this.el.panelAddContact.hide();
+                      
 
-            //         });
+                    // });
 
-            //     }
+                }
 
-            //     btn.disabled = false;
+                // btn.disabled = false;
 
-            // });
+            });
 
         });
 

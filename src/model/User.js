@@ -83,11 +83,13 @@ export class User extends Model {
 
    
 
-    // addContact(contact){
+    addContact(contact){
+        //btoa forma uma strings sem caractéres especial(usei para evitar problema 
+        // com o "." e o "@")
+        return User.getRef()
+            .doc(this.email).collection('contacts').doc(btoa(contact.email)).set(contact.toJSON());
 
-    //     return User.getRef().doc(this.id).collection('contacts').doc(contact.email).set(contact.toJSON());
-
-    // }
+    }
 
     // getContacts(){
 
