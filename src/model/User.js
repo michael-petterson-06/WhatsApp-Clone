@@ -91,30 +91,29 @@ export class User extends Model {
 
     }
 
-    // getContacts(){
+    getContacts(){
 
-    //     return new Promise((s, f)=>{
+        return new Promise((s, f)=>{
 
-    //         User.getRef().doc(this.id).collection('contacts').onSnapshot(docs => {
+            User.getRef().doc(this.email).collection('contacts').onSnapshot(docs => {
 
-    //             let contacts = [];
+                let contacts = [];
 
-    //             docs.forEach(doc=>{
+                docs.forEach(doc=>{
 
-    //                 let data = doc.data();
-    //                 data._id = doc.id;
-    //                 contacts.push(data);
+                    let data = doc.data();
+                    data._id = doc.id;
+                    contacts.push(data);
 
-    //             });
+                });
 
-    //             s(docs);
+                this.trigger('contactschange', contacts);
+              
+                s(contacts);
+            });
 
-    //             this.trigger('contactschange', contacts);
+        });        
 
-    //         });
-
-    //     });        
-
-    // }
+    }
 
 }
