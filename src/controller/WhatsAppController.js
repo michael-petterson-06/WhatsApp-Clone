@@ -4,6 +4,7 @@ import { MicrophoneController } from './MicrophoneController';
 import { DocumentPreviewController } from './DocumentPreviewController';
 import { Firebase } from './../util/Firebase';
 import { User } from './../model/User';
+import { Chat } from './../model/Chat';
 
 export class WhatsAppController {
   
@@ -150,6 +151,7 @@ export class WhatsAppController {
                 //         this.setActiveChat(contact);
 
                 //     });
+
 
                 // });
 
@@ -392,9 +394,9 @@ export class WhatsAppController {
 
                 } else {
 
-                    // Chat.createIfNotExists(this._user.email, email).then(chat => {
+                    Chat.createIfNotExists(this._user.email, email).then(chat => {
 
-                    //     contact.chatId = chat.id;
+                        contact.chatId = chat.id;
 
                         this._user.addContact(contact).then(() => {
                         
@@ -404,13 +406,10 @@ export class WhatsAppController {
                             // this.el.panelAddContact.hide();
                         });
 
-                        // this._user.chatId = chat.id;
+                        this._user.chatId = chat.id;
 
-                        // contact.addContact(this._user);
-
-                      
-
-                    // });
+                        contact.addContact(this._user);
+                    });
 
                 }
 
