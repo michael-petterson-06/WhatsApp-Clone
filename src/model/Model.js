@@ -5,6 +5,7 @@ export class Model extends ClassEvent {
     constructor() {
         super();
         this._data = {};
+        
     }
 
     fromJSON(json) {

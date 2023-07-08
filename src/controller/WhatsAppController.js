@@ -63,8 +63,9 @@ export class WhatsAppController {
     initContacts() {
         // this._user.save().then(() => {
         //<span class="_3T2VG">${Format.fbTimeStampToTime(contact.lastMessageTime)}</span>
+            
             this._user.on('contactschange', contacts => {
-
+                
                 this.el.contactsMessagesList.innerHTML = '';
 
                 contacts.forEach(contact => {
@@ -132,6 +133,8 @@ export class WhatsAppController {
 
                     }
 
+                    this.setActiveChat(contactEl, contact)
+
                     // contactEl.dataset.contact = JSON.stringify(contact);
 
                     this.el.contactsMessagesList.appendChild(contactEl);
@@ -158,7 +161,24 @@ export class WhatsAppController {
     
     }
 
+    setActiveChat(contactEl, contact){
+        contactEl.on('click', event => {
 
+            this.el.activeName.innerHTML = contact.name;
+            this.el.activeStatus.innerHTML = contact.status;
+    
+            if (contact.photo) {
+                let img = this.el.activePhoto;
+                img.src = contact.photo;
+                img.show();
+            }
+
+            this.el.home.hide();
+            this.el.main.css({
+                display: 'flex'
+            });
+        });
+    }
 
     loadElements() {
 
