@@ -1,5 +1,5 @@
-import { Model } from './../util/Model'
-// import { Firebase } from './../util/Firebase'
+import { Model } from './Model'
+import { Firebase } from './../util/Firebase'
 // import { Format } from '../util/Format';
 
 export class Message extends Model {
@@ -289,6 +289,48 @@ export class Message extends Model {
         element.firstElementChild.classList.add(className);
 
         return element;
+    }
+
+    static send(chatId, from, type, content, setSent = true){
+
+        return new Promise((s, f)=>{
+
+            let promiseSent = Message.getRef(chatId).add({
+                content,
+                from,
+                type,
+                timeStamp: new Date(),
+                status: 'wait'
+            });
+            
+            // if (setSent) {
+
+            //     promiseSent.then(result => {
+
+            //         let docRef = result.parent.doc(result.id);
+
+            //         s(docRef.set({
+            //             status: 'sent'
+            //         }, {
+            //             merge: true
+            //         }));
+
+            //     }).catch(err=>{ f(err); });
+
+            // } else {
+
+            //     s(promiseSent);
+
+            // }
+
+        });
+
+    }
+
+    static getRef(chatId){
+
+        return Firebase.db().collection('chats').doc(chatId).collection('messages');
+
     }
 
 }
