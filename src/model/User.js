@@ -21,8 +21,8 @@ export class User extends Model {
     get photo() { return this._data.photo; }
     set photo(value) { this._data.photo = value; }
 
-    // get chatId() { return this._data.chatId; }
-    // set chatId(value) { this._data.chatId = value; }
+    get chatId() { return this._data.chatId; }
+    set chatId(value) { this._data.chatId = value; }
 
     getById(id){
         return new Promise((s, f)=>{
@@ -86,35 +86,33 @@ export class User extends Model {
     addContact(contact){
         //btoa forma uma strings sem caractéres especial(usei para evitar problema 
         // com o "." e o "@")
-        return User.getRef()
-            .doc(this.email).collection('contacts').doc(btoa(contact.email)).set(contact.toJSON());
+        return User.getRef().doc(this.email).collection('contacts').doc(btoa(contact.email)).set(contact.toJSON());
 
     }
 
-    // getContacts(){
+    getContacts(filter = ''){
 
-    //     return new Promise((s, f)=>{
+        return new Promise((s, f)=>{
+           
+            User.getRef().doc(this.email).collection('contacts').where('name', '>=', filter).onSnapshot(docs => {
 
-    //         User.getRef().doc(this.id).collection('contacts').onSnapshot(docs => {
+                let contacts = [];
 
-    //             let contacts = [];
+                docs.forEach(doc=>{
 
-    //             docs.forEach(doc=>{
+                    let data = doc.data();
+                    data.id = doc.id;
+                    contacts.push(data);
 
-    //                 let data = doc.data();
-    //                 data._id = doc.id;
-    //                 contacts.push(data);
+                });
 
-    //             });
+                this.trigger('contactschange', contacts);
+              
+                s(contacts);
+            });
 
-    //             s(docs);
+        });        
 
-    //             this.trigger('contactschange', contacts);
-
-    //         });
-
-    //     });        
-
-    // }
+    }
 
 }
