@@ -26,8 +26,25 @@ export class Format {
 
       }
 
-  }
+     }
 
 
+    static fbTimeStampToTime(timeStamp) {
 
+      return (timeStamp && typeof timeStamp.toDate === 'function') ? Format.dateToTime(timeStamp.toDate()) : '';
+
+    }
+
+  
+    static dateToTime(date, locale = 'pt-BR') {
+
+        let string = '';
+
+        if (date && date instanceof Date) {
+            string = date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+        }
+
+        return string;
+
+    }
 }

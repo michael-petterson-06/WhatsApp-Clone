@@ -1,6 +1,6 @@
 import { Model } from './Model'
 import { Firebase } from './../util/Firebase'
-// import { Format } from '../util/Format';
+import { Format } from '../util/Format';
 
 export class Message extends Model {
 
@@ -13,6 +13,8 @@ export class Message extends Model {
 
     }
 
+    get id() { return this._data.id; }
+    set id(value) { this._data.id = value; }
 
     get content() { return this._data.content; }
     set content(value) { this._data.content = value; }
@@ -28,12 +30,6 @@ export class Message extends Model {
    
    
     getViewElement(me = true){
-
-        // <span class="message-time">${Format.fbTimeStampToTime(this.timeStamp)}</span>
-        // <span class="message-time">${Format.fbTimeStampToTime(this.timeStamp)}</span>
-        // <span class="message-time text-white">${Format.fbTimeStampToTime(this.timeStamp)}</span>
-        // <span class="message-time">${Format.fbTimeStampToTime(this.timeStamp)}</span>
-        // <span class="message-time">${Format.fbTimeStampToTime(this.timeStamp)}</span>
 
         let element = document.createElement('div');
 
@@ -52,7 +48,8 @@ export class Message extends Model {
                                     <div class="_1WliW" style="height: 49px; width: 49px;">
                                         <img src="#" class="Qgzj8 gqwaM photo-contact-sended" style="display:none">
                                         <div class="_3ZW2E">
-                                            <span data-icon="default-user">
+                                            <span data-icon="
+                                            ult-user">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 212 212" width="212" height="212">
                                                     <path fill="#DFE5E7" d="M106.251.5C164.653.5 212 47.846 212 106.25S164.653 212 106.25 212C47.846 212 .5 164.654.5 106.25S47.846.5 106.251.5z"></path>
                                                     <g fill="#FFF">
@@ -230,7 +227,8 @@ export class Message extends Model {
                                     <div class="_1WliW" style="height: 55px; width: 55px;">
                                         <img src="#" class="Qgzj8 gqwaM message-photo" style="display:none">
                                         <div class="_3ZW2E">
-                                            <span data-icon="default-user">
+                                            <span data-icon="
+                                            ult-user">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 212 212" width="212" height="212">
                                                     <path fill="#DFE5E7" d="M106.251.5C164.653.5 212 47.846 212 106.25S164.653 212 106.25 212C47.846 212 .5 164.654.5 106.25S47.846.5 106.251.5z"></path>
                                                     <g fill="#FFF">
@@ -263,7 +261,7 @@ export class Message extends Model {
 
             default:
                 element.innerHTML = `
-                    <div class="font-style _3DFk6 tail">
+                    <div class="font-style _3DFk6 tail "id="_${this.id}">
                         <span class="tail-container"></span>
                         <span class="tail-container highlight"></span>
                         <div class="Tkt2p">
@@ -274,7 +272,7 @@ export class Message extends Model {
                             </div>
                             <div class="_2f-RV">
                                 <div class="_1DZAH">
-                                    <span class="message-time">${this.timeStamp}</span>
+                                <span class="message-time">${Format.fbTimeStampToTime(this.timeStamp)}</span>
                                 </div>
                             </div>
                         </div>
