@@ -86,23 +86,22 @@ export class User extends Model {
     addContact(contact){
         //btoa forma uma strings sem caractéres especial(usei para evitar problema 
         // com o "." e o "@")
-        return User.getRef()
-            .doc(this.email).collection('contacts').doc(btoa(contact.email)).set(contact.toJSON());
+        return User.getRef().doc(this.email).collection('contacts').doc(btoa(contact.email)).set(contact.toJSON());
 
     }
 
-    getContacts(){
+    getContacts(filter = ''){
 
         return new Promise((s, f)=>{
-
-            User.getRef().doc(this.email).collection('contacts').onSnapshot(docs => {
+           
+            User.getRef().doc(this.email).collection('contacts').where('name', '>=', filter).onSnapshot(docs => {
 
                 let contacts = [];
 
                 docs.forEach(doc=>{
 
                     let data = doc.data();
-                    data._id = doc.id;
+                    data.id = doc.id;
                     contacts.push(data);
 
                 });

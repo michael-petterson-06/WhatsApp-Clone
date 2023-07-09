@@ -188,6 +188,8 @@ export class WhatsAppController {
             img.src = contact.photo;
             img.show();
         }
+
+        this.el.panelMessagesContainer.innerHTML = '';
       
 
         Message.getRef(this._activeContact.chatId).orderBy("timeStamp").onSnapshot(docs => {
@@ -198,7 +200,7 @@ export class WhatsAppController {
 
             let autoScroll = (scrollTop >= scrollTopMax);
 
-            this.el.panelMessagesContainer.innerHTML = '';
+            
             
             docs.forEach(docMsg => {
 
@@ -343,6 +345,22 @@ export class WhatsAppController {
 
   initEvents() {
 
+                
+        this.el.inputSearchContacts.on('keyup', e => {
+        
+            if(this.el.inputSearchContacts.value.length > 0) {
+                        
+                this.el.inputSearchContactsPlaceholder.hide();
+            } else {
+             
+                this.el.inputSearchContactsPlaceholder.show();
+            }
+
+            this._user.getContacts(this.el.inputSearchContacts.value);
+       
+        });
+        
+        
         this.el.myPhoto.on('click', event => {
 
             // this.el.panelAddContact.hide();
