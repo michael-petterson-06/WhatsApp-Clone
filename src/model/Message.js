@@ -173,6 +173,26 @@ export class Message extends Model {
                     </div>
                 `;
 
+                // element.querySelector('.message-photo').on('load', function(){
+                    element.querySelector('.message-photo').on('load', e => {
+
+                    
+                    element.querySelector('.message-photo').show()
+
+                    element.querySelector('._34Olu').hide();
+
+                    element.querySelector('._3v3PK').css({
+                        height: 'auto'
+                    });
+
+                })
+                // .on('click', function(){
+
+                //     window.open(this.src);
+
+                // });
+
+
                break;
 
             case 'audio':
@@ -304,7 +324,43 @@ export class Message extends Model {
         return element;
     }
 
+            
+    static sendImage(chatId, from, file){
+
+        return new Promise((s, f)=>{
+
+            let uploadTask = Firebase
+                .hd()
+                .ref(from)
+                .child(Date.now() + '_' + file.name)
+                .put(file);
+
+            uploadTask.on('state_changed', snapshot => {
+
+                console.log('upload', snapshot);
+
+            }, err => {
+
+                f(err);
+
+            }, success => {
+
+                Message.send(chatId, from, 'image', uploadTask.snapshot.downloadURL).then(() => {
+                    // Message.send(chatId, from, 'image', '', false)
+                    // s(uploadTask.snapshot);
+                     s();
+                });
+                
+
+            });
+
+        });
+
+   
+    }
+
     static send(chatId, from, type, content, setSent = true){
+        
 
         return new Promise((s, f)=>{
 
