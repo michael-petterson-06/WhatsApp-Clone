@@ -335,9 +335,9 @@ export class Message extends Model {
                 .child(Date.now() + '_' + file.name)
                 .put(file);
 
-            uploadTask.on('state_changed', snapshot => {
+            uploadTask.on('state_changed', e => {
 
-                console.log('upload', snapshot);
+                console.log('upload', e);
 
             }, err => {
 
