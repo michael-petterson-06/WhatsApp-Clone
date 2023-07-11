@@ -611,39 +611,46 @@ export class WhatsAppController {
 
         this.el.btnSendPicture.on('click', event => {
 
-            // this.el.btnSendPicture.disabled = true;
+            this.el.btnSendPicture.disabled = true;
 
-            // let picture = new Image();
-            // picture.src = this.el.pictureCamera.src;
-            // picture.onload = () => {
+            let regex = /^data:(.+);base64,(.*)$/;
+            let result = this.el.pictureCamera.src.match(regex);
+            let mimeType = result[1];
+            let ext = mimeType.split('/')[1];
+       
+            let filename = `camera${Date.now()}.${ext}}`;
 
-            //     let canvas = document.createElement('canvas');
-            //     let context = canvas.getContext('2d');
+            let picture = new Image();
+            picture.src = this.el.pictureCamera.src;
+            picture.onload = () => {
 
-            //     canvas.setAttribute('width', picture.width);
-            //     canvas.setAttribute('height', picture.height);
+                let canvas = document.createElement('canvas');
+                let context = canvas.getContext('2d');
 
-            //     context.translate(picture.width, 0);
-            //     context.scale(-1, 1);
-            //     context.drawImage(picture, 0, 0, canvas.width, canvas.height);
+                canvas.setAttribute('width', picture.width);
+                canvas.setAttribute('height', picture.height);
 
-            //     Base64.toFile(canvas.toDataURL(Base64.getMimeType(this.el.pictureCamera.src))).then(file => {
+                context.translate(picture.width, 0);
+                context.scale(-1, 1);
+                context.drawImage(picture, 0, 0, canvas.width, canvas.height);
 
-            //         Message.sendImage(this._activeContact.chatId, this._user.email, file);
+                fetch(canvas.toDataURL(mimeType)).then((res) => {return res.arrayBuffer();})
+                .then((buffer) => { return new File([buffer], filename, { type: mimeType}); })
+                .then(file => {
+                    Message.sendImage(this._activeContact.chatId, this._user.email, file)
+                    this.el.btnSendPicture.disabled = false;
+                });
 
-            //         this.closeAllMainPanel();
-            //         this._cameraController.stop();
-            //         this.el.btnReshootPanelCamera.hide();
-            //         this.el.pictureCamera.hide();
-            //         this.el.videoCamera.show();
-            //         this.el.containerSendPicture.hide();
-            //         this.el.containerTakePicture.show();
-            //         this.el.panelMessagesContainer.show();
-            //         this.el.btnSendPicture.disabled = false;
-
-            //     });
-
-            // };
+                    this.closeAllMainPanel();
+                    this._camera.stop()
+                    this.el.btnReshootPanelCamera.hide();
+                    this.el.pictureCamera.hide();
+                    this.el.videoCamera.show();
+                    this.el.containerSendPicture.hide();
+                    this.el.containerTakePicture.show();
+                    this.el.panelMessagesContainer.show();
+                    this.el.btnSendPicture.disabled = false;
+            };
 
         });
 

@@ -30,9 +30,11 @@ export class Message extends Model {
    
    
     getViewElement(me = true){
-
+      
         let element = document.createElement('div');
-
+        
+        element.id = `_${this.id}`
+        
         element.className = 'message';
 
         switch (this.type) {
@@ -281,7 +283,7 @@ export class Message extends Model {
 
             default:
                 element.innerHTML = `
-                    <div class="font-style _3DFk6 tail "id="_${this.id}">
+                    <div class="font-style _3DFk6 tail">
                         <span class="tail-container"></span>
                         <span class="tail-container highlight"></span>
                         <div class="Tkt2p">
@@ -335,9 +337,9 @@ export class Message extends Model {
                 .child(Date.now() + '_' + file.name)
                 .put(file);
 
-            uploadTask.on('state_changed', snapshot => {
+            uploadTask.on('state_changed', e => {
 
-                console.log('upload', snapshot);
+                console.log('upload', e);
 
             }, err => {
 
