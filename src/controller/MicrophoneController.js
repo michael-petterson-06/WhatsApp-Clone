@@ -16,6 +16,7 @@ export class MicrophoneController extends ClassEvent {
         //Ativando microfone
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
 
+            //Se usuário permitiu audio eu valido para true
             this._available = true;
            
             this._stream = stream;
@@ -32,6 +33,8 @@ export class MicrophoneController extends ClassEvent {
             //     audio: this._audio
             // });
             
+
+            //"Estou pronto para gravar"
             this.trigger('ready', this._stream);
 
         }).catch(err => {
@@ -118,23 +121,26 @@ export class MicrophoneController extends ClassEvent {
                 // var fileReader = new FileReader();
 
                 let filename = `rec${Date.now()}.webm`;
+                
+                //blob para manipulação de binário
                 let file = new File([blob], filename, {
                     type: this._mimeType,
                     lastModified: Date.now()
                 });
-                console.log('file', file)
+                
+                
 
-                let reader = new FileReader();
+                // let reader = new FileReader();
 
 
-                     reader.onload = e => {
+                //      reader.onload = e => {
 
-                        let audio = new Audio(reader.result)
-                        audio.play()
+                //         let audio = new Audio(reader.result)
+                //         audio.play()
                         
-                    };
+                //     };
 
-                    reader.readAsDataURL(file)
+                // reader.readAsDataURL(file)
 
                 // fileReader.onload = e => {
 

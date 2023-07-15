@@ -6,7 +6,6 @@ export class Firebase {
 
     constructor() {
 
-
       this._config = {
         apiKey: "AIzaSyA4BjqmuMhMgyPbNXUOLppQDPaNtcA2B9o",
         authDomain: "whtas-app-clone-6628e.firebaseapp.com",

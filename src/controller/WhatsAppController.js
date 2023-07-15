@@ -6,6 +6,7 @@ import { Firebase } from './../util/Firebase';
 import { User } from './../model/User';
 import { Chat } from './../model/Chat';
 import { Message } from '../model/Message';
+import { Base64 } from '../util/Base64';
 
 
 
@@ -23,25 +24,27 @@ export class WhatsAppController {
 
     initAuth() {
 
-        this._firebase.initAuth().then(response => {
+        this._firebase.initAuth().then(response => {    
         
             this._user = new User(response.user.email);
                     
+            //Escuta alterações nos dados dos usuários
             this._user.on('datachange', data => {
-
+                
                 document.querySelector('title').innerHTML = `${data.name} | WhatsApp Clone`;
                 this.el.inputNamePanelEditProfile.innerHTML = data.name;
 
+                let img = this.el.myPhoto.querySelector('img');
+                let imgEdit = this.el.imgPanelEditProfile;
+
                 if (data.photo) {
-                    let photo = this.el.imgPanelEditProfile;
-                    photo.src = data.photo;
-                    photo.show();
+                    img = this.el.imgPanelEditProfile;
+                    img.src = data.photo;
+                    img.show();
                     this.el.imgDefaultPanelEditProfile.hide();
-                    let photo2 = this.el.myPhoto.querySelector('img');
-                    photo2.src = data.photo;
-                    photo2.show();
-                    
-                    
+                    imgEdit = this.el.myPhoto.querySelector('img');
+                    imgEdit.src = data.photo;
+                    imgEdit.show();
                 } 
 
                 this.initContacts();
@@ -68,16 +71,17 @@ export class WhatsAppController {
         // this._user.save().then(() => {
         //<span class="_3T2VG">${Format.fbTimeStampToTime(contact.lastMessageTime)}</span>
             
-            this._user.on('contactschange', contacts => {
+            this._user.on('contactschange', docs => {
                 
                 this.el.contactsMessagesList.innerHTML = '';
-
-                contacts.forEach(contact => {
+              
+                docs.forEach(doc => {
                     
+                    let contact = doc.data()
                     let contactEl = document.createElement('div');
-
+                              
                     contactEl.className = 'contact-item';
-
+                    contactEl.id = contact.chatId; 
                     contactEl.innerHTML = `
                         <div class="dIyEr">
                             <div class="_1WliW" style="height: 49px; width: 49px;">
@@ -173,11 +177,12 @@ export class WhatsAppController {
     }
 
     setActiveChat(contact){
-
+      
         if (this._activeContact) {
+            //Zero os onSnapshot anteriores
             Message.getRef(this._activeContact.chatId).onSnapshot(() => { });
         }
-
+      
         this._activeContact = contact;
 
         this.el.activeName.innerHTML = contact.name;
@@ -191,57 +196,85 @@ export class WhatsAppController {
 
         this.el.panelMessagesContainer.innerHTML = '';
       
-
+        // "onSnapshot" - Busca a msg no firebase e atualiza na tela
         Message.getRef(this._activeContact.chatId).orderBy("timeStamp").onSnapshot(docs => {
-
-            let scrollTop = this.el.panelMessagesContainer.scrollTop;
            
+            //Altura  do scroll
+            let scrollTop = this.el.panelMessagesContainer.scrollTop;
+          
+            //O tamanho máximo de msg sem acionar a bara de rolamento
             let scrollTopMax = this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight;
 
+            //Se altura ultrapassar o máximo "autoScroll recebe true"
             let autoScroll = (scrollTop >= scrollTopMax);
 
-            
-            
+            const found = []
             docs.forEach(docMsg => {
-
+                
                 let data = docMsg.data();
 
                 data.id = docMsg.id
                 
                 let message = new Message();    
-                    
+                
                 message.fromJSON(data);
                 
                 let me = (data.from === this._user.email)
-            
+                
+                //Se não tiver mostrando essa msg, então mostre.
                 if(!this.el.panelMessagesContainer.querySelector('#_' + data.id)){
                     
                     if (!me) {
+                        //Se cair na msg lida pelo usuário 
                         docMsg.ref.set({
                             status: 'read'
                         }, {
                             merge: true
                         });
                     }
-
+                    
                     let messageEl = message.getViewElement(me);
 
                     this.el.panelMessagesContainer.appendChild(messageEl);
 
-                } else if (me){
+                } else if(data.type === 'document') {
 
-                    let msgEl = this.el.panelMessagesContainer.querySelector('#_' + data.id)
+                    let contacts = document.querySelectorAll('.contact-item')
 
-                    msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement().outerHTML;
+                    found.push([...contacts].find(element => element.id == this._activeContact.chatId))
+                        
+                   
+                    //Se tiver na tela pego o elemento criado
+                    let messageEl = message.getViewElement(me);
+                    
+                    // e atualizo a tela principal
+                    this.el.panelMessagesContainer.querySelector('#_' + data.id).innerHTML = messageEl.innerHTML;
 
                 }
                 
+                               
+                if (this.el.panelMessagesContainer.querySelector('#_' + data.id) && me){
+                    
+                    //"'#_' + data.id" Id assim para evitar caso o firebase crie id com número da frente, pq os seletores como por exemplo ="querySelector" não aceita id com número da frente.
+                   
+                    //Se a msg já está na tela eu pego ela 
+                    let msgEl = this.el.panelMessagesContainer.querySelector('#_' + data.id)
 
+                    //e atualizo o status dela. para send
+                    msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement().outerHTML;
+
+                }
+            
             });
+            //Atualiza o painel principal com um clique no elemento do contato ativo
+            if(found[0])found[0].click()
+            
 
             if (autoScroll) {
+                //Aumento a altura do scroll
                 this.el.panelMessagesContainer.scrollTop = (this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight);
             } else {
+                //Deixo a tela parada na altura de onde eu estiver lendo que é no scrollTop atualizado
                 this.el.panelMessagesContainer.scrollTop = scrollTop;
             }
         });
@@ -258,8 +291,7 @@ export class WhatsAppController {
         this.el = {};
 
         document.querySelectorAll('[id]').forEach(element => {
-            //Faço um for em todos os ids, criando uma função para transforma-los
-            // em camelcase e passo o elemento para referenciar o id
+            //Faço um for em todos os ids, criando uma função para transforma-los em camelcase e passo o elemento para referenciar o id
             this.el[Format.getCamelcase(element.id)] = element;
 
         });
@@ -341,6 +373,7 @@ export class WhatsAppController {
 
       HTMLFormElement.prototype.getForm = function () {
 
+        // Pega todos os campos dentro do formData
         return new FormData(this);
 
       }
@@ -348,7 +381,7 @@ export class WhatsAppController {
       HTMLFormElement.prototype.toJSON = function () {
 
         let json = {};
-
+        // Transformando retorn do formulário em json
         this.getForm().forEach((value, key) => {
             json[key] = value;
         });
@@ -496,6 +529,9 @@ export class WhatsAppController {
                         this._user.chatId = chat.id;
 
                         contact.addContact(this._user);
+
+                            // console.log('eu',this._user)
+                            // console.log('meu contato',contact)
                     });
 
                 }
@@ -526,8 +562,7 @@ export class WhatsAppController {
 
         this.el.btnAttach.on('click', event => {
 
-            //semelhante ao default, usado para não os eventos desse elemento não se 
-            //propagarem para o evento pai
+            //semelhante ao default, usado para os eventos desse elemento não se propagarem para o evento pai
             event.stopPropagation();
 
             this.el.menuAttach.addClass('open');
@@ -541,7 +576,7 @@ export class WhatsAppController {
             // this.closeAllMainPanel();
             // this.el.panelMessagesContainer.show();
             this.el.inputPhoto.click();
-            console.log('photo')
+            
 
         });
 
@@ -549,7 +584,6 @@ export class WhatsAppController {
 
             [...this.el.inputPhoto.files].forEach(file => {
                 
-        
                 Message.sendImage(this._activeContact.chatId, this._user.email, file);
 
             });
@@ -630,6 +664,7 @@ export class WhatsAppController {
                 canvas.setAttribute('width', picture.width);
                 canvas.setAttribute('height', picture.height);
 
+                //Desenverte a imagem
                 context.translate(picture.width, 0);
                 context.scale(-1, 1);
                 context.drawImage(picture, 0, 0, canvas.width, canvas.height);
@@ -660,7 +695,8 @@ export class WhatsAppController {
             this.el.inputDocument.click();
              this.el.panelDocumentPreview.addClass('open');
              this.el.panelDocumentPreview.css({
-                'height': 'calc(100% - 120px)',
+                  // 'height': 'calc(100% - 120px)',
+                  'height': 'calc(100%)',
             });
 
         });
@@ -697,14 +733,17 @@ export class WhatsAppController {
 
                     this.el.infoPanelDocumentPreview.innerHTML = result.info;
                     this.el.panelDocumentPreview.css({
-                        'height': 'calc(100% - 120px)',
+                        // 'height': 'calc(100% - 120px)',
+                        'height': 'calc(100%)',
                     });
         
                     
 
                 }).catch(err => {
+                    
                     this.el.panelDocumentPreview.css({
-                        'height': 'calc(100% - 120px)',
+                        // 'height': 'calc(100% - 120px)',
+                        'height': 'calc(100%)',
                     });
         
                   
@@ -757,24 +796,25 @@ export class WhatsAppController {
 
 
         this.el.btnSendDocument.on('click', event => {
-            console.log('send document')
-            // let documentFile = this.el.inputDocument.files[0];
+            
+           
+            let documentFile = this.el.inputDocument.files[0];
 
-            // if (documentFile.type === 'application/pdf') {
+            if (documentFile.type === 'application/pdf') {
 
-            //     Base64.toFile(this.el.imgPanelDocumentPreview.src).then(imageFile => {
+                Base64.toFile(this.el.imgPanelDocumentPreview.src).then(imageFile => {
+                    
+                    Message.sendDocument(this._activeContact.chatId, this._user.email, documentFile, imageFile, this.el.infoPanelDocumentPreview.innerHTML);
 
-            //         Message.sendDocument(this._activeContact.chatId, this._user.email, documentFile, imageFile, this.el.infoPanelDocumentPreview.innerHTML);
+                });
 
-            //     });
+            } else {
 
-            // } else {
+                Message.sendDocument(this._activeContact.chatId, this._user.email, documentFile);
 
-            //     Message.sendDocument(this._activeContact.chatId, this._user.email, documentFile);
+            }
 
-            // }
-
-            // this.el.btnClosePanelDocumentPreview.click();
+            this.el.btnClosePanelDocumentPreview.click();
 
         });
 
@@ -810,14 +850,12 @@ export class WhatsAppController {
             this.el.recordMicrophone.show();
             this.el.btnSendMicrophone.hide();
 
-            
-
             this._microphoneController = new MicrophoneController();
-
                             
-            
+            //"Agora consigo ouvir o evento ready"
             this._microphoneController.on('ready', musica => {
-             
+                
+                //Começar a gravação
                 this._microphoneController.startRecorder();
             });
 
@@ -977,14 +1015,11 @@ export class WhatsAppController {
     closeRecordMicrophone() {
 
         // this._microphoneController.stopRecorder();
-
         this.el.recordMicrophone.hide();
         this.el.btnSendMicrophone.show();
-        
-      
-
     }
 
+    
     closeAllLeftPanel() {
         this.el.panelAddContact.hide();
         this.el.panelEditProfile.hide()

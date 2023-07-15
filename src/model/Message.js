@@ -13,6 +13,8 @@ export class Message extends Model {
 
     }
 
+    //Esses dados são carregados no Model e é invocado na linha "message.fromJSON(data);" do WhatsAppController.js
+
     get id() { return this._data.id; }
     set id(value) { this._data.id = value; }
 
@@ -27,18 +29,42 @@ export class Message extends Model {
 
     get status() { return this._data.status; }
     set status(value) { this._data.status = value; }
-   
-   
-    getViewElement(me = true){
+
+    get preview() { return this._data.preview; }
+    set preview(value) { this._data.preview = value; }
+
+    get filename() { return this._data.filename; }
+    set filename(value) { this._data.filename = value; }
+
+    get fileType() { return this._data.fileType; }
+    set fileType(value) { this._data.fileType = value; }
+
+    get size() { return this._data.size; }
+    set size(value) { this._data.size = value; }
+
+    get from() { return this._data.from; }
+    set from(value) { this._data.from = value; }
+
+    get info() { return this._data.info; }
+    set info(value) { this._data.info = value; }
+
+    get photo() { return this._data.photo; }
+    set photo(value) { this._data.photo = value; }
+
+    get duration() { return this._data.duration; }
+    set duration(value) { this._data.duration = value; }
       
+    
+    getViewElement(me = true){
+
         let element = document.createElement('div');
         
         element.id = `_${this.id}`
         
         element.className = 'message';
-
+        
         switch (this.type) {
-
+            
             case 'contact':
                 element.innerHTML = `
                     <div class="_3_7SH kNKwo tail">
@@ -130,6 +156,15 @@ export class Message extends Model {
                             </div>
                         </div>
                 `;
+
+
+                element.on('click', e=>{
+              
+                    window.open(this.content);
+
+                });
+
+           
                 break;
 
             case 'image':
@@ -175,16 +210,17 @@ export class Message extends Model {
                     </div>
                 `;
 
-                // element.querySelector('.message-photo').on('load', function(){
-                    element.querySelector('.message-photo').on('load', e => {
-
+                element.querySelector('.message-photo').on('load', function(){
+                    // element.querySelector('.message-photo').on('load', e => {
                     
-                    element.querySelector('.message-photo').show()
+                    this.show();
+                    // element.querySelector('.message-photo').show()
 
                     element.querySelector('._34Olu').hide();
 
                     element.querySelector('._3v3PK').css({
-                        height: 'auto'
+                        height: 'auto',
+                        // display: 'flex'
                     });
 
                 })
@@ -282,6 +318,7 @@ export class Message extends Model {
                 break;
 
             default:
+                
                 element.innerHTML = `
                     <div class="font-style _3DFk6 tail">
                         <span class="tail-container"></span>
@@ -326,20 +363,21 @@ export class Message extends Model {
         return element;
     }
 
-            
-    static sendImage(chatId, from, file){
+
+    static upload(from, file){
 
         return new Promise((s, f)=>{
 
+            //Cria uma referencia de image no servidor
             let uploadTask = Firebase
                 .hd()
                 .ref(from)
                 .child(Date.now() + '_' + file.name)
                 .put(file);
 
-            uploadTask.on('state_changed', e => {
+            uploadTask.on('state_changed', snapshot => {
 
-                console.log('upload', e);
+                console.log('upload', snapshot);
 
             }, err => {
 
@@ -347,25 +385,70 @@ export class Message extends Model {
 
             }, success => {
 
-                Message.send(chatId, from, 'image', uploadTask.snapshot.downloadURL).then(() => {
-                    // Message.send(chatId, from, 'image', '', false)
-                    // s(uploadTask.snapshot);
-                     s();
-                });
-                
+                s(uploadTask.snapshot);
 
             });
 
         });
 
-   
     }
+   
 
-    static send(chatId, from, type, content, setSent = true){
-        
+            
+    static sendImage(chatId, from, file){
 
         return new Promise((s, f)=>{
 
+            Message.upload(from, file).then(snapshot=>{
+
+                 //Busca a imagem pelo endereço criado
+                Message.send(chatId, from, 'image', snapshot.downloadURL).then(() => {
+                    // Message.send(chatId, from, 'image', '', false)
+                    // s(uploadTask.snapshot);
+                     s();
+                });
+            });
+
+        });
+        
+        // return new Promise((s, f)=>{
+        //     //Cria uma referencia de image no servidor
+        //     let uploadTask = Firebase
+        //         .hd()
+        //         .ref(from)
+        //         .child(Date.now() + '_' + file.name)
+        //         .put(file);
+
+        //     //Faz upload da image
+        //     uploadTask.on('state_changed', e => {
+
+        //         console.log('upload', e);
+
+        //     }, err => {
+
+        //         f(err);
+
+        //     }, success => {
+
+        //         //Busca a imagem pelo endereço criado
+        //         Message.send(chatId, from, 'image', uploadTask.snapshot.downloadURL).then(() => {
+        //             // Message.send(chatId, from, 'image', '', false)
+        //             // s(uploadTask.snapshot);
+        //              s();
+        //         });
+                
+
+        //     });
+
+        // });
+
+   
+    }
+                
+    static send(chatId, from, type, content, setSent = true){
+   
+        return new Promise((s, f)=>{
+           
             let promiseSent = Message.getRef(chatId).add({
                 content,
                 from,
@@ -373,18 +456,21 @@ export class Message extends Model {
                 timeStamp: new Date(),
                 status: 'wait'
             });
-            
+           
             // if (setSent) {
-
+                
                 promiseSent.then(result => {
-
+                    
+                    //Pego o documento que eu acabei de inserir através do elemento pai e muda o status dele.
                     let docRef = result.parent.doc(result.id);
-
-                    s(docRef.set({
+                   
+                    docRef.set({
                         status: 'sent'
                     }, {
                         merge: true
-                    }));
+                    })
+                   
+                    s(docRef);
 
                 }).catch(err=>{ f(err); });
 
@@ -394,9 +480,57 @@ export class Message extends Model {
 
             // }
 
+        })
+    }
+
+    static sendDocument(chatId, from, documentFile, imageFile, pdfInfo) {
+
+        return Message.send(chatId, from, 'document', '', false).then(msgRef => {
+           
+            Message.upload(from, documentFile).then(snapshot=>{
+
+                let fileDocumentDownload = snapshot.downloadURL;
+
+                if (imageFile) {
+
+                    Message.upload(from, imageFile).then(snapshot => {
+
+                        let fileImageDownload = snapshot.downloadURL;
+
+                        msgRef.set({
+                            content: fileDocumentDownload,
+                            preview: fileImageDownload,
+                            filename: documentFile.name,
+                            size: documentFile.size,
+                            info: pdfInfo,
+                            fileType: documentFile.type,
+                            status: 'sent'
+                        }, {
+                            merge: true
+                        });
+
+                    });
+
+                } else {
+
+                    msgRef.set({
+                        content: fileDocumentDownload,
+                        filename: documentFile.name,
+                        size: documentFile.size,
+                        fileType: documentFile.type,
+                        status: 'sent'
+                    }, {
+                        merge: true
+                    });
+
+                }
+
+            });            
+
         });
 
     }
+
 
     static getRef(chatId){
 

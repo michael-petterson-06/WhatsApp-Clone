@@ -30,7 +30,7 @@ export class Format {
 
 
     static fbTimeStampToTime(timeStamp) {
-
+      //Verifica se timeStamp existe e se dentro dele possui uma função "toDate"
       return (timeStamp && typeof timeStamp.toDate === 'function') ? Format.dateToTime(timeStamp.toDate()) : '';
 
     }

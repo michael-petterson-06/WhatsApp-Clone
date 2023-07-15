@@ -28,10 +28,11 @@ export class Chat extends Model {
             Chat.getRef().add({
                 users,
                 timeStamp: new Date()
-            }).then(doc=>{
+            }).then(doc=>{ //Pega o id do chat criado
 
+                 //Usa esse id para pegar o chat completo
                 Chat.getRef().doc(doc.id).get().then(chat=>{
-
+                    
                     s(chat);
 
                 }).catch(err=>{ f(err) });
@@ -67,7 +68,7 @@ export class Chat extends Model {
                 } else {
 
                     chats.forEach(chat => {
-
+                        
                         s(chat);
 
                     });
