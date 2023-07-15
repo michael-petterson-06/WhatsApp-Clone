@@ -177,7 +177,7 @@ export class WhatsAppController {
     }
 
     setActiveChat(contact){
-      
+            
         if (this._activeContact) {
             //Zero os onSnapshot anteriores
             Message.getRef(this._activeContact.chatId).onSnapshot(() => { });
@@ -195,10 +195,10 @@ export class WhatsAppController {
         }
 
         this.el.panelMessagesContainer.innerHTML = '';
-      
+        
         // "onSnapshot" - Busca a msg no firebase e atualiza na tela
         Message.getRef(this._activeContact.chatId).orderBy("timeStamp").onSnapshot(docs => {
-           
+            
             //Altura  do scroll
             let scrollTop = this.el.panelMessagesContainer.scrollTop;
           
@@ -208,7 +208,8 @@ export class WhatsAppController {
             //Se altura ultrapassar o máximo "autoScroll recebe true"
             let autoScroll = (scrollTop >= scrollTopMax);
 
-            const found = []
+            let found;
+                console.log(docs)
             docs.forEach(docMsg => {
                 
                 let data = docMsg.data();
@@ -241,7 +242,7 @@ export class WhatsAppController {
 
                     let contacts = document.querySelectorAll('.contact-item')
 
-                    found.push([...contacts].find(element => element.id == this._activeContact.chatId))
+                    found = [...contacts].find(element => element.id == this._activeContact.chatId)
                         
                    
                     //Se tiver na tela pego o elemento criado
@@ -266,8 +267,19 @@ export class WhatsAppController {
                 }
             
             });
-            //Atualiza o painel principal com um clique no elemento do contato ativo
-            if(found[0])found[0].click()
+            
+            //Atualiza o painel principal com um clique no elemento do contato ativo, pq por algum motivo a atualização não o arquivo apareçe mais quando clico nele da um erro e o upload de imagem final bugado sem a atualização no if acima.
+            if(found) {
+                const messagesOut = document.querySelectorAll('.message-out')
+                const lastMessgeout = messagesOut[messagesOut.length -1];
+                const typeFile = lastMessgeout.querySelector('.message-file-type')
+             
+                if(typeFile && typeFile.innerHTML !== 'undefined'){
+                    found.click()
+                    console.log(typeFile.innerHTML)
+                }
+            }
+            
             
 
             if (autoScroll) {
