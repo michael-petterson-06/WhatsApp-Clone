@@ -3,9 +3,10 @@ export class ClassEvent {
   constructor() {
 
       this._events = {};
-
+       
   }
 
+  //ouve
   on(name, fn) {
     
       if (!this._events[name]) this._events[name] = new Array();
@@ -14,12 +15,14 @@ export class ClassEvent {
 
   }
 
+  //executa
   trigger() {
 
       let args = [...arguments];
       let eventName = args.shift();
       args.push(new Event(eventName));
 
+      //verifica se tem algum ouvinte, se chamaram o on
       if (this._events[eventName] instanceof Array) {
 
           this._events[eventName].forEach(fn => {

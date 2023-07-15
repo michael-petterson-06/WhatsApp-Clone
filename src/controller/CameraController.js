@@ -8,8 +8,9 @@ export class CameraController {
 
             this._stream = stream;
 
-            //Acha o caminho da camera
+            //Acha o caminho da camera 
             // this._videoEl.src = URL.createObjectURL(stream) Depreciativo
+            //Transforma stream binário em uma url para o src do vídeo conseguir ler.
             this._videoEl.srcObject = stream;
             //Mostra a camera
             this._videoEl.play();

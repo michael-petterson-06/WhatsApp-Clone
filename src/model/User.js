@@ -8,7 +8,7 @@ export class User extends Model {
     constructor(id){
         
         super();
-        
+       
         if(id) this.getById(id);
 
     }
@@ -30,7 +30,7 @@ export class User extends Model {
             User.findByEmail(id).onSnapshot(doc => {
 
                 this.fromJSON(doc.data());
-
+              
                 s(doc);
 
                 // this.trigger('contactschange', contacts);
@@ -106,8 +106,8 @@ export class User extends Model {
 
                 });
 
-                this.trigger('contactschange', contacts);
-              
+                this.trigger('contactschange', docs);
+                
                 s(contacts);
             });
 
