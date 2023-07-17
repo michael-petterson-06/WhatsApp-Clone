@@ -199,14 +199,10 @@ export class WhatsAppController {
         
         this.el.panelMessagesContainer.innerHTML = '';
         
-        
-        const arrayElements = []
-        
+             
         // "onSnapshot" - Busca a msg no firebase e atualiza na tela
         Message.getRef(this._activeContact.chatId).orderBy("timeStamp").onSnapshot(docs => {
             
-            
-
             //Altura  do scroll
             let scrollTop = this.el.panelMessagesContainer.scrollTop;
           
@@ -228,7 +224,9 @@ export class WhatsAppController {
                 message.fromJSON(data);
                 
              
-                let me = (data.from === this._user.email)
+                let me = (data.from === this._user.email);
+
+                let messageEl = message.getViewElement(me);
                
                 //Se não tiver mostrando essa msg, então mostre.
                 if(!this.el.panelMessagesContainer.querySelector('#_' + data.id)){
@@ -246,8 +244,6 @@ export class WhatsAppController {
                         
                     }
                    
-                    let messageEl = message.getViewElement(me);
-
                     this.el.panelMessagesContainer.appendChild(messageEl);
 
                     this._idLastMsg = `_${data.id}`;
@@ -255,14 +251,12 @@ export class WhatsAppController {
                     
                                         
                 } else  {
-                    
-                                      
-                    //Se tiver na tela pego o elemento criado
-                    let messageEl = message.getViewElement(me);
-                    
-                    // e atualizo a tela principal
-                    this.el.panelMessagesContainer.querySelector('#_' + data.id).innerHTML = messageEl.innerHTML;
-                          
+                                        
+                    // Pega o pai dos elemento onde ocorrerá a troca.
+                    let parent = this.el.panelMessagesContainer.querySelector('#_' + data.id).parentNode;
+
+                    // E substitui um elemento pelo outro usando (replaceChild).
+                    parent.replaceChild(messageEl, this.el.panelMessagesContainer.querySelector('#_' + data.id))
                 }
                 
                                
@@ -276,16 +270,44 @@ export class WhatsAppController {
                     //e atualizo o status dela. para send
                     msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement().outerHTML;
                 }
+
+                if (data.type === 'contact') {
+
+                    messageEl.querySelector('.btn-message-send').on('click', e => {
+
+                        //Criando um chat com a pessoa logada e contato enviado ou recebido
+                        Chat.createIfNotExists(this._user.email, data.content.email).then(chat => {
+
+                            //Preciso de um objeto da classe User para enviar no addContact
+                            let contact = new User(data.content.email);
+
+                            
+                            contact.on('datachange', userData => {
+
+                                //Contato enviado recebe chatID
+                                contact.chatId = chat.id;
+                                
+                                //Usuário logado adiciona contato recebido, caso exista vai ignorar
+                                this._user.addContact(contact);
+
+                                //Usuário logado recebe chatId.
+                                this._user.chatId = chat.id;
+
+                                //Contato enviado recebe contado do usuário logado.
+                                contact.addContact(this._user);
+
+                                //Cira um novo chat
+                                this.setActiveChat(contact);
+
+                            });
+
+                        });
+
+                    });
+
+                }
             
             });
-
-
-            
-            
-            //Atualiza o painel principal com um clique no elemento do contato ativo, pq por algum motivo a atualização não o arquivo apareçe mais quando clico nele da um erro e o upload de imagem final bugado sem a atualização no if acima.
-                          
-                   
-            
 
             if (autoScroll) {
                 //Aumento a altura do scroll
