@@ -105,13 +105,19 @@ export class Message extends Model {
                     </div>
                 `;
 
-            // if (this.content.photo) {
+            if (this.content.photo) {
 
-            //     let img = element.querySelector('.photo-contact-sended');
-            //     img.src = this.content.photo;
-            //     img.show();
+                let img = element.querySelector('.photo-contact-sended');
+                img.src = this.content.photo;
+                img.show();
 
-            // }
+            }
+
+            element.querySelector('.btn-message-send').on('click', e => {
+
+                console.log('Enviar mensagem');
+
+            });
 
             break;
 
@@ -481,6 +487,12 @@ export class Message extends Model {
             // }
 
         })
+    }
+
+    static sendContact(chatId, from, contact){
+
+        return Message.send(chatId, from, 'contact', contact);
+
     }
 
     static sendDocument(chatId, from, documentFile, imageFile, pdfInfo) {

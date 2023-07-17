@@ -7,6 +7,7 @@ import { User } from './../model/User';
 import { Chat } from './../model/Chat';
 import { Message } from '../model/Message';
 import { Base64 } from '../util/Base64';
+import { ContactsController } from './ContactsController';
 
 
 
@@ -81,7 +82,7 @@ export class WhatsAppController {
                     let contactEl = document.createElement('div');
                               
                     contactEl.className = 'contact-item';
-                    contactEl.id = contact.chatId; 
+                    contactEl.id = `_${contact.chatId}`; 
                     contactEl.innerHTML = `
                         <div class="dIyEr">
                             <div class="_1WliW" style="height: 49px; width: 49px;">
@@ -142,7 +143,9 @@ export class WhatsAppController {
                     }   
 
                     contactEl.on('click', event => {
-
+                        
+                        
+                        
                         this.setActiveChat(contact)
            
                     });
@@ -184,7 +187,7 @@ export class WhatsAppController {
         }
       
         this._activeContact = contact;
-
+        
         this.el.activeName.innerHTML = contact.name;
         this.el.activeStatus.innerHTML = contact.status;
 
@@ -193,12 +196,17 @@ export class WhatsAppController {
             img.src = contact.photo;
             img.show();
         }
-
+        
         this.el.panelMessagesContainer.innerHTML = '';
+        
+        
+        const arrayElements = []
         
         // "onSnapshot" - Busca a msg no firebase e atualiza na tela
         Message.getRef(this._activeContact.chatId).orderBy("timeStamp").onSnapshot(docs => {
             
+            
+
             //Altura  do scroll
             let scrollTop = this.el.panelMessagesContainer.scrollTop;
           
@@ -207,50 +215,54 @@ export class WhatsAppController {
 
             //Se altura ultrapassar o máximo "autoScroll recebe true"
             let autoScroll = (scrollTop >= scrollTopMax);
-
-            let found;
-                console.log(docs)
+            
+            
             docs.forEach(docMsg => {
                 
                 let data = docMsg.data();
-
+                               
                 data.id = docMsg.id
                 
                 let message = new Message();    
                 
                 message.fromJSON(data);
                 
+             
                 let me = (data.from === this._user.email)
-                
+               
                 //Se não tiver mostrando essa msg, então mostre.
                 if(!this.el.panelMessagesContainer.querySelector('#_' + data.id)){
+                  
                     
+                  
                     if (!me) {
+                    
                         //Se cair na msg lida pelo usuário 
                         docMsg.ref.set({
                             status: 'read'
                         }, {
                             merge: true
                         });
+                        
                     }
-                    
+                   
                     let messageEl = message.getViewElement(me);
 
                     this.el.panelMessagesContainer.appendChild(messageEl);
 
-                } else if(data.type === 'document') {
-
-                    let contacts = document.querySelectorAll('.contact-item')
-
-                    found = [...contacts].find(element => element.id == this._activeContact.chatId)
-                        
-                   
+                    this._idLastMsg = `_${data.id}`;
+                    
+                    
+                                        
+                } else  {
+                    
+                                      
                     //Se tiver na tela pego o elemento criado
                     let messageEl = message.getViewElement(me);
                     
                     // e atualizo a tela principal
                     this.el.panelMessagesContainer.querySelector('#_' + data.id).innerHTML = messageEl.innerHTML;
-
+                          
                 }
                 
                                
@@ -260,26 +272,19 @@ export class WhatsAppController {
                    
                     //Se a msg já está na tela eu pego ela 
                     let msgEl = this.el.panelMessagesContainer.querySelector('#_' + data.id)
-
+                    
                     //e atualizo o status dela. para send
                     msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement().outerHTML;
-
                 }
             
             });
+
+
+            
             
             //Atualiza o painel principal com um clique no elemento do contato ativo, pq por algum motivo a atualização não o arquivo apareçe mais quando clico nele da um erro e o upload de imagem final bugado sem a atualização no if acima.
-            if(found) {
-                const messagesOut = document.querySelectorAll('.message-out')
-                const lastMessgeout = messagesOut[messagesOut.length -1];
-                const typeFile = lastMessgeout.querySelector('.message-file-type')
-             
-                if(typeFile && typeFile.innerHTML !== 'undefined'){
-                    found.click()
-                    console.log(typeFile.innerHTML)
-                }
-            }
-            
+                          
+                   
             
 
             if (autoScroll) {
@@ -291,12 +296,15 @@ export class WhatsAppController {
             }
         });
 
+      
+
         this.el.home.hide();
         this.el.main.css({
             display: 'flex'
         
         });
     }
+   
 
     loadElements() {
 
@@ -808,8 +816,7 @@ export class WhatsAppController {
 
 
         this.el.btnSendDocument.on('click', event => {
-            
-           
+          
             let documentFile = this.el.inputDocument.files[0];
 
             if (documentFile.type === 'application/pdf') {
@@ -834,27 +841,24 @@ export class WhatsAppController {
 
         this.el.btnAttachContact.on('click', event => {
 
-            this.el.modalContacts.show();
+            
+            this._contactsController = new ContactsController(this.el.modalContacts, this._user);
 
-            // this._contactsController = new ContactsController(this.el.modalContacts, this._user);
+            
+            this._contactsController.on('select', contact => {
 
-            // this._contactsController.open();
+                Message.sendContact(this._activeContact.chatId, this._user.email, contact);
+            
+            });
 
-            // this._contactsController.on('select', contact => {
-
-            //     Message.sendContact(this._activeContact.chatId, this._user.email, contact);
-
-            //     this._contactsController.close();
-
-            // });
+            this._contactsController.open();
 
         });
 
         this.el.btnCloseModalContacts.on('click', event => {
 
-            this.el.modalContacts.hide();
-            // this._contactsController.close();
-
+            this._contactsController.close();
+            
         });
 
         this.el.btnSendMicrophone.on('click', event => {
