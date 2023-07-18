@@ -375,6 +375,7 @@ export class Message extends Model {
 
                 //Executar eventos criados
 
+                //Quando termina zera o tempo e starta " inputRange.on"
                 audio.onended = e => {
 
                     audio.currentTime = 0;

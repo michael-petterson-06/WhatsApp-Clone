@@ -499,6 +499,40 @@ export class WhatsAppController {
 
         });
 
+
+        this.el.inputProfilePhoto.on('change', event => {
+
+            if (this.el.inputProfilePhoto.files.length) {
+
+                let file = this.el.inputProfilePhoto.files[0];
+                let filename = `${Date.now()}${file.name}`;
+
+                let uploadTask = Firebase.hd().ref('profile').child(filename).put(file);
+
+                uploadTask.on('state_changed', snapshot => {
+
+                    console.log('upload', snapshot);
+
+                }, err => {
+
+                    console.error(err);
+
+                }, () => {
+
+                    this._user.photo = uploadTask.snapshot.downloadURL;
+                    this._user.save().then(() => {
+
+                        this.el.btnClosePanelEditProfile.click();
+
+                    });
+
+                });
+
+            }
+
+        });
+
+
       
         this.el.inputNamePanelEditProfile.on('keypress', event => {
 
