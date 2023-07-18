@@ -110,58 +110,44 @@ export class MicrophoneController extends ClassEvent {
 
             });
 
+            //Parar a Gravação
             this._mediaRecorder.addEventListener('stop', e => {
 
                 let blob = new Blob(this._recordedChunks, {
                     type: this._mimeType
                 });
 
-                // let cx = new AudioContext();
-
-                // var fileReader = new FileReader();
-
                 let filename = `rec${Date.now()}.webm`;
-                
-                //blob para manipulação de binário
-                let file = new File([blob], filename, {
-                    type: this._mimeType,
-                    lastModified: Date.now()
-                });
-                
-                
 
-                // let reader = new FileReader();
+                let cx = new AudioContext();
 
+                var fileReader = new FileReader();
+                            
+                fileReader.onload = e => {
+                    
+                    cx.decodeAudioData(fileReader.result).then(decode => {
 
-                //      reader.onload = e => {
-
-                //         let audio = new Audio(reader.result)
-                //         audio.play()
+                        //blob para manipulação de binário
+                        let file = new File([blob], filename, {
+                            type: this._mimeType,
+                            lastModified: Date.now()
+                        });
                         
-                //     };
+                        // O click no btnCancelMicrophone chega aqui mas não aciona o trigger porque não tem "on" para ouvir
 
-                // reader.readAsDataURL(file)
+                        // O click no btnFinishMicrophone aciona o trigger porque lá o "on" está ouvindo
 
-                // fileReader.onload = e => {
+                        this.trigger('recorded', file, decode);
 
-                //     cx.decodeAudioData(fileReader.result).then(decode => {
+                    });
 
-                //         let file = new File([blob], 'rec' + new Date().getTime() + '.webm', {
-                //             type: 'audio/webm',
-                //             lastModified: Date.now()
-                //         });
+                };
 
-                //         this.trigger('recorded', file, decode);
-
-                //     });
-
-                // };
-
-                // fileReader.readAsArrayBuffer(blob);                
+                fileReader.readAsArrayBuffer(blob);                
 
             });
 
-            this._mediaRecorder.start();
+            this._mediaRecorder.start(); //Aciona o evento "dataavailable".
             this.startTimer();
 
         }

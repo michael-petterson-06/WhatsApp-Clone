@@ -231,8 +231,6 @@ export class WhatsAppController {
                 //Se não tiver mostrando essa msg, então mostre.
                 if(!this.el.panelMessagesContainer.querySelector('#_' + data.id)){
                   
-                    
-                  
                     if (!me) {
                     
                         //Se cair na msg lida pelo usuário 
@@ -246,10 +244,6 @@ export class WhatsAppController {
                    
                     this.el.panelMessagesContainer.appendChild(messageEl);
 
-                    this._idLastMsg = `_${data.id}`;
-                    
-                    
-                                        
                 } else  {
                                         
                     // Pega o pai dos elemento onde ocorrerá a troca.
@@ -280,7 +274,6 @@ export class WhatsAppController {
 
                             //Preciso de um objeto da classe User para enviar no addContact
                             let contact = new User(data.content.email);
-
                             
                             contact.on('datachange', userData => {
 
@@ -883,6 +876,8 @@ export class WhatsAppController {
             
         });
 
+        
+
         this.el.btnSendMicrophone.on('click', event => {
            
             this.el.recordMicrophone.show();
@@ -895,6 +890,7 @@ export class WhatsAppController {
                 
                 //Começar a gravação
                 this._microphoneController.startRecorder();
+
             });
 
             this._microphoneController.on('recordtimer', timer => {
@@ -916,11 +912,11 @@ export class WhatsAppController {
 
         this.el.btnFinishMicrophone.on('click', event => {
 
-            // this._microphoneController.on('recorded', (file, metadata) => {
+            this._microphoneController.on('recorded', (file, metadata) => {
 
-            //     Message.sendAudio(this._activeContact.chatId, this._user.email, file, metadata, this._user.photo);
+                Message.sendAudio(this._activeContact.chatId, this._user.email, file, metadata, this._user.photo);
 
-            // });
+            });
 
             this._microphoneController.stopRecorder();
             this.closeRecordMicrophone();

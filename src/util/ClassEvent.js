@@ -12,6 +12,7 @@ export class ClassEvent {
       if (!this._events[name]) this._events[name] = new Array();
 
       this._events[name].push(fn);
+      console.log(this._events)
 
   }
 
@@ -31,7 +32,7 @@ export class ClassEvent {
               //     type: eventName,
               //     timeStamp: new Date().getTime()
               // });
-
+              console.log('Trigger', args)
               fn.apply(null, args)
 
           });

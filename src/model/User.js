@@ -9,8 +9,8 @@ export class User extends Model {
         
         super();
        
-        if(id) this.getById(id);
-
+            if(id) this.getById(id);
+      
     }
     get name() { return this._data.name; }
     set name(value) { this._data.name = value; }

@@ -11,7 +11,7 @@ export class Model extends ClassEvent {
     fromJSON(json) {
             
         this._data = Object.assign(this._data, json);
-         
+        
         //avisa alterações nos dados dos usuários
         this.trigger('datachange', this.toJSON());
 
