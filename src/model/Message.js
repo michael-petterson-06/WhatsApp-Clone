@@ -10,7 +10,6 @@ export class Message extends Model {
 
         // this._locale = 'pt-BR';
         // this._data = {};
-
     }
 
     //Esses dados são carregados no Model e é invocado na linha "message.fromJSON(data);" do WhatsAppController.js
@@ -113,12 +112,6 @@ export class Message extends Model {
 
             }
 
-            element.querySelector('.btn-message-send').on('click', e => {
-
-                console.log('Enviar mensagem');
-
-            });
-
             break;
 
             case 'document':
@@ -162,7 +155,8 @@ export class Message extends Model {
                             </div>
                         </div>
                 `;
-
+                
+                //class="_3SUnz message-file-load" essa classe está a imagem com o gif decarregando, verificar no css se quiser consultar.
 
                 element.on('click', e=>{
               
@@ -217,8 +211,7 @@ export class Message extends Model {
                 `;
 
                 element.querySelector('.message-photo').on('load', function(){
-                    // element.querySelector('.message-photo').on('load', e => {
-                    
+                                       
                     this.show();
                     // element.querySelector('.message-photo').show()
 
@@ -320,6 +313,93 @@ export class Message extends Model {
                         </div>
                     </div>
                 `;
+
+                if (this.photo) {
+
+                    let img = element.querySelector('.message-photo');
+                    img.src = this.photo;
+                    img.show();
+
+                }
+
+                let audio = element.querySelector('audio');
+                let btnPlay = element.querySelector('.audio-play');
+                let btnPause = element.querySelector('.audio-pause');
+                let inputRange = element.querySelector('[type="range"]');
+
+                element.querySelector('.message-audio-duration').innerHTML = Format.toTime(this.duration * 1000);
+
+                //Começar a criar eventos.
+
+                //Audio carregado pronto para tocar.
+                audio.onloadeddata = e => {
+
+                    element.querySelector('.audio-load').hide();
+                    btnPlay.show();
+
+                }
+
+                //Coloca o audio para tocar
+                audio.onplay = e => {
+
+                    btnPlay.hide();
+                    btnPause.show();
+
+                }
+
+                //Pausa o audio
+                audio.onpause = e=> {
+
+                    element.querySelector('.message-audio-duration').innerHTML = Format.toTime(this.duration * 1000);
+                    btnPlay.show();
+                    btnPause.hide();
+
+                }
+
+                //Manipula audio
+                audio.ontimeupdate = e => {
+
+                    btnPlay.hide();
+                    btnPause.hide();
+
+                    element.querySelector('.message-audio-duration').innerHTML = Format.toTime(audio.currentTime * 1000);
+                    inputRange.value = (audio.currentTime * 100) / this.duration;
+
+                    if (audio.paused) {
+                        btnPlay.show();
+                    } else {    
+                        btnPause.show();
+                    }
+                    
+                }
+
+                //Executar eventos criados
+
+                //Quando termina zera o tempo e starta " inputRange.on"
+                audio.onended = e => {
+
+                    audio.currentTime = 0;
+
+                }
+
+                btnPlay.on('click', e => {
+
+                    audio.play();
+
+                });
+
+                btnPause.on('click', e => {
+
+                    audio.pause();
+
+                });
+
+                //Barrinha azul do audio na msg. esse currentTime pega qual tempo do audio está
+                inputRange.on('change', e => {
+
+                    audio.currentTime = (inputRange.value * this.duration) / 100;
+
+                });
 
                 break;
 
@@ -492,6 +572,32 @@ export class Message extends Model {
     static sendContact(chatId, from, contact){
 
         return Message.send(chatId, from, 'contact', contact);
+
+    }
+
+
+    static sendAudio(chatId, from, file, metadata, photo){
+
+        return Message.send(chatId, from, 'audio', '', false).then(msgRef => {
+
+            Message.upload(from, file).then(snapshot => {
+
+                let downloadFile = snapshot.downloadURL
+
+                msgRef.set({
+                    content: downloadFile, //Link do arquivo de audio
+                    size: file.size,
+                    fileType: file.type,
+                    photo,
+                    duration: metadata.duration,
+                    status: 'sent'
+                }, {
+                    merge: true
+                });
+
+            });
+
+        });        
 
     }
 

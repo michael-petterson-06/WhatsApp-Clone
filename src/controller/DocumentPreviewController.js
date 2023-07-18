@@ -9,6 +9,7 @@ export class DocumentPreviewController {
 
     constructor(file){
 
+        console.log('construtor DocumentPreviewController ')
         this._file = file;
         
     }

@@ -15,13 +15,81 @@ export class WhatsAppController {
   
     constructor() {
         
+        this._active = true;
         this._firebase = new Firebase();
         this.initAuth();
         this.elementsPrototype();
         this.loadElements();
         this.initEvents();
+        this.checkNotifications();
         
     }
+
+    checkNotifications() {
+
+        //O navegar suporta essa funcão?
+        if (typeof Notification === 'function') {
+          
+            //Permite notificações
+            if (Notification.permission !== 'granted') {
+
+                 this.el.alertNotificationPermission.show();
+                
+                // Se já tem a permissão não precisa mostrar a notificação.
+            } else {
+ 
+                this.el.alertNotificationPermission.hide();
+
+            }
+
+            this.el.alertNotificationPermission.on('click', e => {
+
+ 
+                Notification.requestPermission(permission => {
+ 
+                    if (permission === "granted") {
+ 
+                        this.el.alertNotificationPermission.hide();
+ 
+                    }
+
+                });
+
+            });
+
+        }
+
+    }
+
+
+    notification(data) {
+        
+                       
+        if (!this._active && Notification.permission === 'granted') {
+          
+                 
+            let n = new Notification(this._activeContact.name, {
+                icon: this._activeContact.photo,
+                body: data.content
+            })
+
+            let nSound = new Audio('./audio/alert.mp3');
+
+            nSound.currentTime = 0;
+            nSound.play();
+            
+       
+           
+            setTimeout(() => {
+
+                if (n) n.close();
+
+            }, 3000);
+
+        }
+
+    }
+
 
     initAuth() {
 
@@ -198,15 +266,12 @@ export class WhatsAppController {
         }
         
         this.el.panelMessagesContainer.innerHTML = '';
-        
-        
-        const arrayElements = []
+
+        this._messagesReceived = [];
         
         // "onSnapshot" - Busca a msg no firebase e atualiza na tela
         Message.getRef(this._activeContact.chatId).orderBy("timeStamp").onSnapshot(docs => {
             
-            
-
             //Altura  do scroll
             let scrollTop = this.el.panelMessagesContainer.scrollTop;
           
@@ -220,20 +285,28 @@ export class WhatsAppController {
             docs.forEach(docMsg => {
                 
                 let data = docMsg.data();
-                               
-                data.id = docMsg.id
-                
-                let message = new Message();    
-                
+
+                data.id = docMsg.id;
+
+                let message = new Message(); 
+
                 message.fromJSON(data);
-                
-             
-                let me = (data.from === this._user.email)
+            
+                let me = (data.from === this._user.email);
+            
+                if (!me && this._messagesReceived.filter(id => { return (id === data.id) }).length === 0) {
+                    
+                    
+                    this.notification(data);
+
+                    this._messagesReceived.push(data.id);
+                                 
+                }
+               
+                let messageEl = message.getViewElement(me);
                
                 //Se não tiver mostrando essa msg, então mostre.
                 if(!this.el.panelMessagesContainer.querySelector('#_' + data.id)){
-                  
-                    
                   
                     if (!me) {
                     
@@ -246,23 +319,15 @@ export class WhatsAppController {
                         
                     }
                    
-                    let messageEl = message.getViewElement(me);
-
                     this.el.panelMessagesContainer.appendChild(messageEl);
 
-                    this._idLastMsg = `_${data.id}`;
-                    
-                    
-                                        
                 } else  {
-                    
-                                      
-                    //Se tiver na tela pego o elemento criado
-                    let messageEl = message.getViewElement(me);
-                    
-                    // e atualizo a tela principal
-                    this.el.panelMessagesContainer.querySelector('#_' + data.id).innerHTML = messageEl.innerHTML;
-                          
+                                        
+                    // Pega o pai dos elemento onde ocorrerá a troca.
+                    let parent = this.el.panelMessagesContainer.querySelector('#_' + data.id).parentNode;
+
+                    // E substitui um elemento pelo outro usando (replaceChild).
+                    parent.replaceChild(messageEl, this.el.panelMessagesContainer.querySelector('#_' + data.id))
                 }
                 
                                
@@ -276,16 +341,43 @@ export class WhatsAppController {
                     //e atualizo o status dela. para send
                     msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement().outerHTML;
                 }
+
+                if (data.type === 'contact') {
+
+                    messageEl.querySelector('.btn-message-send').on('click', e => {
+
+                        //Criando um chat com a pessoa logada e contato enviado ou recebido
+                        Chat.createIfNotExists(this._user.email, data.content.email).then(chat => {
+
+                            //Preciso de um objeto da classe User para enviar no addContact
+                            let contact = new User(data.content.email);
+                            
+                            contact.on('datachange', userData => {
+
+                                //Contato enviado recebe chatID
+                                contact.chatId = chat.id;
+                                
+                                //Usuário logado adiciona contato recebido, caso exista vai ignorar
+                                this._user.addContact(contact);
+
+                                //Usuário logado recebe chatId.
+                                this._user.chatId = chat.id;
+
+                                //Contato enviado recebe contado do usuário logado.
+                                contact.addContact(this._user);
+
+                                //Cira um novo chat
+                                this.setActiveChat(contact);
+
+                            });
+
+                        });
+
+                    });
+
+                }
             
             });
-
-
-            
-            
-            //Atualiza o painel principal com um clique no elemento do contato ativo, pq por algum motivo a atualização não o arquivo apareçe mais quando clico nele da um erro e o upload de imagem final bugado sem a atualização no if acima.
-                          
-                   
-            
 
             if (autoScroll) {
                 //Aumento a altura do scroll
@@ -414,6 +506,20 @@ export class WhatsAppController {
 
   initEvents() {
 
+    
+        window.addEventListener('focus', e => {
+
+            this._active = true;
+            
+        });
+
+        window.addEventListener('blur', e => {
+
+            this._active = false;
+            
+
+        });
+
                 
         this.el.inputSearchContacts.on('keyup', e => {
         
@@ -483,6 +589,40 @@ export class WhatsAppController {
             this.el.inputProfilePhoto.click();
 
         });
+
+
+        this.el.inputProfilePhoto.on('change', event => {
+
+            if (this.el.inputProfilePhoto.files.length) {
+
+                let file = this.el.inputProfilePhoto.files[0];
+                let filename = `${Date.now()}${file.name}`;
+
+                let uploadTask = Firebase.hd().ref('profile').child(filename).put(file);
+
+                uploadTask.on('state_changed', snapshot => {
+
+                    console.log('upload', snapshot);
+
+                }, err => {
+
+                    console.error(err);
+
+                }, () => {
+
+                    this._user.photo = uploadTask.snapshot.downloadURL;
+                    this._user.save().then(() => {
+
+                        this.el.btnClosePanelEditProfile.click();
+
+                    });
+
+                });
+
+            }
+
+        });
+
 
       
         this.el.inputNamePanelEditProfile.on('keypress', event => {
@@ -861,6 +1001,8 @@ export class WhatsAppController {
             
         });
 
+        
+
         this.el.btnSendMicrophone.on('click', event => {
            
             this.el.recordMicrophone.show();
@@ -873,6 +1015,7 @@ export class WhatsAppController {
                 
                 //Começar a gravação
                 this._microphoneController.startRecorder();
+
             });
 
             this._microphoneController.on('recordtimer', timer => {
@@ -894,11 +1037,11 @@ export class WhatsAppController {
 
         this.el.btnFinishMicrophone.on('click', event => {
 
-            // this._microphoneController.on('recorded', (file, metadata) => {
+            this._microphoneController.on('recorded', (file, metadata) => {
 
-            //     Message.sendAudio(this._activeContact.chatId, this._user.email, file, metadata, this._user.photo);
+                Message.sendAudio(this._activeContact.chatId, this._user.email, file, metadata, this._user.photo);
 
-            // });
+            });
 
             this._microphoneController.stopRecorder();
             this.closeRecordMicrophone();

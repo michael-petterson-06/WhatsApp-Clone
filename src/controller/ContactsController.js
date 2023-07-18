@@ -79,7 +79,6 @@ export class ContactsController extends ClassEvent {
                     this.trigger('select', doc);
                     this.close();
 
-
                 });
 
                 this._listEl.appendChild(item);
