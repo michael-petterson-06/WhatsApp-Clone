@@ -15,13 +15,81 @@ export class WhatsAppController {
   
     constructor() {
         
+        this._active = true;
         this._firebase = new Firebase();
         this.initAuth();
         this.elementsPrototype();
         this.loadElements();
         this.initEvents();
+        this.checkNotifications();
         
     }
+
+    checkNotifications() {
+
+        //O navegar suporta essa funcão?
+        if (typeof Notification === 'function') {
+          
+            //Permite notificações
+            if (Notification.permission !== 'granted') {
+
+                 this.el.alertNotificationPermission.show();
+                
+                // Se já tem a permissão não precisa mostrar a notificação.
+            } else {
+ 
+                this.el.alertNotificationPermission.hide();
+
+            }
+
+            this.el.alertNotificationPermission.on('click', e => {
+
+ 
+                Notification.requestPermission(permission => {
+ 
+                    if (permission === "granted") {
+ 
+                        this.el.alertNotificationPermission.hide();
+ 
+                    }
+
+                });
+
+            });
+
+        }
+
+    }
+
+
+    notification(data) {
+        
+                       
+        if (!this._active && Notification.permission === 'granted') {
+          
+                 
+            let n = new Notification(this._activeContact.name, {
+                icon: this._activeContact.photo,
+                body: data.content
+            })
+
+            let nSound = new Audio('./audio/alert.mp3');
+
+            nSound.currentTime = 0;
+            nSound.play();
+            
+       
+           
+            setTimeout(() => {
+
+                if (n) n.close();
+
+            }, 3000);
+
+        }
+
+    }
+
 
     initAuth() {
 
@@ -198,8 +266,9 @@ export class WhatsAppController {
         }
         
         this.el.panelMessagesContainer.innerHTML = '';
+
+        this._messagesReceived = [];
         
-             
         // "onSnapshot" - Busca a msg no firebase e atualiza na tela
         Message.getRef(this._activeContact.chatId).orderBy("timeStamp").onSnapshot(docs => {
             
@@ -216,16 +285,24 @@ export class WhatsAppController {
             docs.forEach(docMsg => {
                 
                 let data = docMsg.data();
-                               
-                data.id = docMsg.id
-                
-                let message = new Message();    
-                
-                message.fromJSON(data);
-                
-             
-                let me = (data.from === this._user.email);
 
+                data.id = docMsg.id;
+
+                let message = new Message(); 
+
+                message.fromJSON(data);
+            
+                let me = (data.from === this._user.email);
+            
+                if (!me && this._messagesReceived.filter(id => { return (id === data.id) }).length === 0) {
+                    
+                    
+                    this.notification(data);
+
+                    this._messagesReceived.push(data.id);
+                                 
+                }
+               
                 let messageEl = message.getViewElement(me);
                
                 //Se não tiver mostrando essa msg, então mostre.
@@ -428,6 +505,20 @@ export class WhatsAppController {
   }
 
   initEvents() {
+
+    
+        window.addEventListener('focus', e => {
+
+            this._active = true;
+            
+        });
+
+        window.addEventListener('blur', e => {
+
+            this._active = false;
+            
+
+        });
 
                 
         this.el.inputSearchContacts.on('keyup', e => {
