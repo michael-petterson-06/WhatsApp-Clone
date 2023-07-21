@@ -75,7 +75,7 @@ export class WhatsAppController {
 
             let nSound = new Audio('./audio/alert.mp3');
 
-            nSound.currentTime = 0;
+            nSound.currentTime = 0; //Caso já tenha tocado 1x volta para o inicio
             nSound.play();
             
        
@@ -251,7 +251,20 @@ export class WhatsAppController {
             
         if (this._activeContact) {
             //Zero os onSnapshot anteriores
-            Message.getRef(this._activeContact.chatId).onSnapshot(() => { });
+                               
+            // Isso não funcionou para zerar os onSnapshot anteriores 
+            // Message.getRef(this._activeContact.chatId).onSnapshot(() => {});
+             
+            //Isso funcionou só com o try-cath
+            try {
+         
+                this._unsubRef()      
+                
+            } catch (error) {
+         
+                console.log(error)
+         
+            }
         }
       
         this._activeContact = contact;
@@ -270,7 +283,7 @@ export class WhatsAppController {
         this._messagesReceived = [];
         
         // "onSnapshot" - Busca a msg no firebase e atualiza na tela
-        Message.getRef(this._activeContact.chatId).orderBy("timeStamp").onSnapshot(docs => {
+        this._unsubRef = Message.getRef(this._activeContact.chatId).orderBy("timeStamp").onSnapshot(docs => {
             
             //Altura  do scroll
             let scrollTop = this.el.panelMessagesContainer.scrollTop;
@@ -294,7 +307,7 @@ export class WhatsAppController {
             
                 let me = (data.from === this._user.email);
             
-                if (!me && this._messagesReceived.filter(id => { return (id === data.id) }).length === 0) {
+                if (!this._messagesReceived.filter(id => { return (id === data.id) }).length) {
                     
                     
                     this.notification(data);
@@ -510,13 +523,13 @@ export class WhatsAppController {
         window.addEventListener('focus', e => {
 
             this._active = true;
-            
+            console.log(this._active)
         });
 
         window.addEventListener('blur', e => {
 
             this._active = false;
-            
+            console.log(this._active)
 
         });
 
