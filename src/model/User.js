@@ -21,6 +21,9 @@ export class User extends Model {
     get photo() { return this._data.photo; }
     set photo(value) { this._data.photo = value; }
 
+    get status() { return this._data.status; }
+    set status(value) { this._data.status = value; }
+
     get chatId() { return this._data.chatId; }
     set chatId(value) { this._data.chatId = value; }
 
@@ -32,8 +35,6 @@ export class User extends Model {
                 this.fromJSON(doc.data());
               
                 s(doc);
-
-                // this.trigger('contactschange', contacts);
 
             })
         });        
@@ -53,36 +54,7 @@ export class User extends Model {
 
     }
 
-    // constructor(id){
-        
-    //     // super();
-
-    //     // this.id = id;
-
-    //     // this.getByid();
-
-    // }
-
-    // getByid(){
-
-    //     return new Promise((s, f)=>{
-
-    //         User.getRef().doc(this.id).onSnapshot(doc => {
-
-    //             this.doc = doc;
-
-    //             this.fromJSON(doc.data());
-
-    //             s(doc);
-
-    //         });
-
-    //     });        
-
-    // }
-
    
-
     addContact(contact){
         //btoa forma uma strings sem caractéres especial(usei para evitar problema 
         // com o "." e o "@")

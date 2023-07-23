@@ -1,5 +1,5 @@
-import { Model } from './Model'
-import { Firebase } from './../util/Firebase'
+import { Model } from './Model';
+import { Firebase } from './../util/Firebase';
 import { Format } from '../util/Format';
 
 export class Message extends Model {
@@ -52,7 +52,7 @@ export class Message extends Model {
 
     get duration() { return this._data.duration; }
     set duration(value) { this._data.duration = value; }
-      
+    
     
     getViewElement(me = true){
 
@@ -496,39 +496,7 @@ export class Message extends Model {
             });
 
         });
-        
-        // return new Promise((s, f)=>{
-        //     //Cria uma referencia de image no servidor
-        //     let uploadTask = Firebase
-        //         .hd()
-        //         .ref(from)
-        //         .child(Date.now() + '_' + file.name)
-        //         .put(file);
-
-        //     //Faz upload da image
-        //     uploadTask.on('state_changed', e => {
-
-        //         console.log('upload', e);
-
-        //     }, err => {
-
-        //         f(err);
-
-        //     }, success => {
-
-        //         //Busca a imagem pelo endereço criado
-        //         Message.send(chatId, from, 'image', uploadTask.snapshot.downloadURL).then(() => {
-        //             // Message.send(chatId, from, 'image', '', false)
-        //             // s(uploadTask.snapshot);
-        //              s();
-        //         });
-                
-
-        //     });
-
-        // });
-
-   
+  
     }
                 
     static send(chatId, from, type, content, setSent = true){
@@ -543,29 +511,44 @@ export class Message extends Model {
                 status: 'wait'
             });
            
-            // if (setSent) {
-                
+            
+            setTimeout(() => {
                 promiseSent.then(result => {
-                    
+                
                     //Pego o documento que eu acabei de inserir através do elemento pai e muda o status dele.
                     let docRef = result.parent.doc(result.id);
-                   
+                    
                     docRef.set({
                         status: 'sent'
                     }, {
                         merge: true
                     })
-                   
+                    
                     s(docRef);
-
+    
                 }).catch(err=>{ f(err); });
-
-            // } else {
-
-            //     s(promiseSent);
-
-            // }
-
+              
+            }, 2500); 
+                
+            
+            
+            setTimeout(() => {
+                promiseSent.then(result => {
+                    
+                    //Pego o documento que eu acabei de inserir através do elemento pai e muda o status dele.
+                    let docRef = result.parent.doc(result.id);
+                
+                        docRef.set({
+                            status: 'received'
+                        }, {
+                            merge: true
+                        })
+                    
+                        s(docRef);
+    
+                    }).catch(err=>{ f(err); });
+            
+               }, 5000);
         })
     }
 
@@ -653,7 +636,7 @@ export class Message extends Model {
     static getRef(chatId){
 
         return Firebase.db().collection('chats').doc(chatId).collection('messages');
-
+      
     }
 
     getStatusViewElement(){
@@ -711,3 +694,8 @@ export class Message extends Model {
     }
 
 }
+    
+    
+
+
+

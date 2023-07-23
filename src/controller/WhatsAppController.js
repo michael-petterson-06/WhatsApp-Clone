@@ -10,7 +10,6 @@ import { Base64 } from '../util/Base64';
 import { ContactsController } from './ContactsController';
 
 
-
 export class WhatsAppController {
   
     constructor() {
@@ -22,7 +21,7 @@ export class WhatsAppController {
         this.loadElements();
         this.initEvents();
         this.checkNotifications();
-        
+      
     }
 
     checkNotifications() {
@@ -63,8 +62,8 @@ export class WhatsAppController {
 
 
     notification(data) {
-        
-                       
+
+                     
         if (!this._active && Notification.permission === 'granted') {
           
                  
@@ -77,9 +76,7 @@ export class WhatsAppController {
 
             nSound.currentTime = 0; //Caso já tenha tocado 1x volta para o inicio
             nSound.play();
-            
-       
-           
+             
             setTimeout(() => {
 
                 if (n) n.close();
@@ -96,7 +93,7 @@ export class WhatsAppController {
         this._firebase.initAuth().then(response => {    
         
             this._user = new User(response.user.email);
-                    
+                   
             //Escuta alterações nos dados dos usuários
             this._user.on('datachange', data => {
                 
@@ -117,13 +114,15 @@ export class WhatsAppController {
                 } 
 
                 this.initContacts();
+           
             });
             
 
             this._user.name = response.user.displayName;
             this._user.email = response.user.email;
             this._user.photo = response.user.photoURL;
-
+            this._user.status = 'online';
+           
             this._user.save().then(() => {
                 this.el.appContent.css({
                     display: 'flex'
@@ -137,20 +136,24 @@ export class WhatsAppController {
 
     
     initContacts() {
-        // this._user.save().then(() => {
-        //<span class="_3T2VG">${Format.fbTimeStampToTime(contact.lastMessageTime)}</span>
-            
+                  
             this._user.on('contactschange', docs => {
+                
                 
                 this.el.contactsMessagesList.innerHTML = '';
               
                 docs.forEach(doc => {
                     
                     let contact = doc.data()
+
+                    // console.log(contact)
                     let contactEl = document.createElement('div');
+
+                    contact.lastMessage ? contact.lastMessage = contact.lastMessage : contact.lastMessage = ''
                               
                     contactEl.className = 'contact-item';
                     contactEl.id = `_${contact.chatId}`; 
+
                     contactEl.innerHTML = `
                         <div class="dIyEr">
                             <div class="_1WliW" style="height: 49px; width: 49px;">
@@ -173,8 +176,8 @@ export class WhatsAppController {
                                     <span dir="auto" title=${contact.name} class="_1wjpf">${contact.name}</span>
                                 </div>
                                 <div class="_3Bxar">
-                                    <span class="_3T2VG">${contact.lastMessageTime}</span>
-                                </div>
+                                    <span class="_3T2VG">${Format.fbTimeStampToTime(contact.lastMessageTime)}</span>
+                               </div>
                             </div>
                             <div class="_1AwDx">
                                 <div class="_itDl">
@@ -211,47 +214,27 @@ export class WhatsAppController {
                     }   
 
                     contactEl.on('click', event => {
-                        
-                        
-                        
+                       
                         this.setActiveChat(contact)
            
                     });
 
-                    
-
-                    // contactEl.dataset.contact = JSON.stringify(contact);
-
                     this.el.contactsMessagesList.appendChild(contactEl);
 
                 });
-
-                // this.el.contactsMessagesList.querySelectorAll('.contact-item').forEach(item => {
-
-                //     item.on('click', event => {
-
-                //         let contact = JSON.parse(item.dataset.contact);
-
-                //         this.setActiveChat(contact);
-
-                //     });
-
-
-                // });
-
+           
             });
-
+        
             this._user.getContacts();
-
-        // });
-    
+   
     }
+
+    
 
     setActiveChat(contact){
             
         if (this._activeContact) {
-            //Zero os onSnapshot anteriores
-                               
+            
             // Isso não funcionou para zerar os onSnapshot anteriores 
             // Message.getRef(this._activeContact.chatId).onSnapshot(() => {});
              
@@ -281,10 +264,11 @@ export class WhatsAppController {
         this.el.panelMessagesContainer.innerHTML = '';
 
         this._messagesReceived = [];
-        
+       
         // "onSnapshot" - Busca a msg no firebase e atualiza na tela
-        this._unsubRef = Message.getRef(this._activeContact.chatId).orderBy("timeStamp").onSnapshot(docs => {
-            
+        this._unsubRef = Message.getRef(this._activeContact.chatId).orderBy("timeStamp").
+        onSnapshot(docs => {
+                   
             //Altura  do scroll
             let scrollTop = this.el.panelMessagesContainer.scrollTop;
           
@@ -298,19 +282,21 @@ export class WhatsAppController {
             docs.forEach(docMsg => {
                 
                 let data = docMsg.data();
-
+                
                 data.id = docMsg.id;
+                
+                data.contextChatId = this._activeContact.chatId
 
                 let message = new Message(); 
 
                 message.fromJSON(data);
             
                 let me = (data.from === this._user.email);
-            
+                
+                //Se não existir nada no array
                 if (!this._messagesReceived.filter(id => { return (id === data.id) }).length) {
                     
-                    
-                    this.notification(data);
+                    // this.notification(data);
 
                     this._messagesReceived.push(data.id);
                                  
@@ -322,20 +308,23 @@ export class WhatsAppController {
                 if(!this.el.panelMessagesContainer.querySelector('#_' + data.id)){
                   
                     if (!me) {
-                    
-                        //Se cair na msg lida pelo usuário 
+                        // console.log(2)
+                        //Msg lida pelo destinatário.
                         docMsg.ref.set({
                             status: 'read'
                         }, {
                             merge: true
                         });
+
+                        // this.el.activeStatus.innerHTML = 'online';
                         
                     }
-                   
+                    
+                    // console.log(1)
                     this.el.panelMessagesContainer.appendChild(messageEl);
 
                 } else  {
-                                        
+                    // console.log(3)                    
                     // Pega o pai dos elemento onde ocorrerá a troca.
                     let parent = this.el.panelMessagesContainer.querySelector('#_' + data.id).parentNode;
 
@@ -345,15 +334,16 @@ export class WhatsAppController {
                 
                                
                 if (this.el.panelMessagesContainer.querySelector('#_' + data.id) && me){
-                    
+                    // console.log(4)
                     //"'#_' + data.id" Id assim para evitar caso o firebase crie id com número da frente, pq os seletores como por exemplo ="querySelector" não aceita id com número da frente.
                    
                     //Se a msg já está na tela eu pego ela 
                     let msgEl = this.el.panelMessagesContainer.querySelector('#_' + data.id)
                     
-                    //e atualizo o status dela. para send
+                    //e atualizo o status dela
                     msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement().outerHTML;
-                }
+                
+                }   
 
                 if (data.type === 'contact') {
 
@@ -392,6 +382,8 @@ export class WhatsAppController {
             
             });
 
+            
+
             if (autoScroll) {
                 //Aumento a altura do scroll
                 this.el.panelMessagesContainer.scrollTop = (this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight);
@@ -400,14 +392,13 @@ export class WhatsAppController {
                 this.el.panelMessagesContainer.scrollTop = scrollTop;
             }
         });
-
-      
+       
 
         this.el.home.hide();
         this.el.main.css({
             display: 'flex'
-        
         });
+      
     }
    
 
@@ -519,17 +510,47 @@ export class WhatsAppController {
 
   initEvents() {
 
-    
-        window.addEventListener('focus', e => {
 
-            this._active = true;
-            console.log(this._active)
-        });
+        // setTimeout(() => {
+
+        //     this.el.activeStatus.innerHTML = '';
+        //     this._active = false;
+        //     this._user.save().then(() => {
+        //         this.el.activeStatus.innerHTML = this._user.status
+        //         this._active = true;
+        //     });
+        //     console.log(this.el.activeStatus)
+        // }, 10000);
+
+        // console.log(this.el.activeStatus)
+
+        // window.addEventListener('focus', e => {
+
+        //     this._user.status = 'online';
+            
+
+        //     this._user.save().then(() => {
+
+        //         this.el.activeStatus.innerHTML = 'online';
+        //         this._active = true;
+              
+        //     });
+          
+            
+
+        //     setTimeout(() => {
+
+        //         this.el.activeStatus.innerHTML = '';
+        //         this._active = false;
+        //         console.log(this.el.activeStatus)
+        //     }, 10000);
+            
+        // });
 
         window.addEventListener('blur', e => {
 
             this._active = false;
-            console.log(this._active)
+            
 
         });
 
