@@ -27,10 +27,15 @@ export class User extends Model {
     get chatId() { return this._data.chatId; }
     set chatId(value) { this._data.chatId = value; }
 
-    getById(id){
+    get uid() { return this._data.uid; }
+    set uid(value) { this._data.uid = value; }
+
+
+
+    getById(userEmail){
         return new Promise((s, f)=>{
 
-            User.findByEmail(id).onSnapshot(doc => {
+            User.findByEmail(userEmail).onSnapshot(doc => {
 
                 this.fromJSON(doc.data());
               

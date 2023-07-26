@@ -8,6 +8,8 @@ import { Chat } from './../model/Chat';
 import { Message } from '../model/Message';
 import { Base64 } from '../util/Base64';
 import { ContactsController } from './ContactsController';
+import { StatusMessage } from '../model/StatusMessage';
+import { DecodeEncode64 } from '../util/DecodeEncode64';
 
 
 export class WhatsAppController {
@@ -121,7 +123,8 @@ export class WhatsAppController {
             this._user.name = response.user.displayName;
             this._user.email = response.user.email;
             this._user.photo = response.user.photoURL;
-            this._user.status = 'online';
+            // this._user.status = 'online';
+            this._user.uid = response.user.uid 
            
             this._user.save().then(() => {
                 this.el.appContent.css({
@@ -135,25 +138,30 @@ export class WhatsAppController {
     }
 
     
-    initContacts() {
+    initContacts() {    
+
+            this._arrayLastMsgReceived = [];
                   
             this._user.on('contactschange', docs => {
                 
                 
                 this.el.contactsMessagesList.innerHTML = '';
+                
               
                 docs.forEach(doc => {
                     
                     let contact = doc.data()
-
-                    // console.log(contact)
+                                       
                     let contactEl = document.createElement('div');
 
-                    contact.lastMessage ? contact.lastMessage = contact.lastMessage : contact.lastMessage = ''
+                    contact.lastMessage ? contact.lastMessage = contact.lastMessage : contact.lastMessage = 'Sem mensagens';
                               
-                    contactEl.className = 'contact-item';
-                    contactEl.id = `_${contact.chatId}`; 
-
+                    
+                    contactEl.classList.add('contact-item')
+                    // contactEl.classList.add(`_${contact.chatId}`)
+                    
+                    // console.log(contact)
+                                                       
                     contactEl.innerHTML = `
                         <div class="dIyEr">
                             <div class="_1WliW" style="height: 49px; width: 49px;">
@@ -184,12 +192,8 @@ export class WhatsAppController {
                                     <span title="digitando…" class="vdXUe _1wjpf typing" style="display:none">digitando…</span>
 
                                     <span class="_2_LEW last-message">
-                                        <div class="_1VfKB">
-                                            <span data-icon="status-dblcheck" class="">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18">
-                                                    <path fill="#263238" fill-opacity=".4" d="M17.394 5.035l-.57-.444a.434.434 0 0 0-.609.076l-6.39 8.198a.38.38 0 0 1-.577.039l-.427-.388a.381.381 0 0 0-.578.038l-.451.576a.497.497 0 0 0 .043.645l1.575 1.51a.38.38 0 0 0 .577-.039l7.483-9.602a.436.436 0 0 0-.076-.609zm-4.892 0l-.57-.444a.434.434 0 0 0-.609.076l-6.39 8.198a.38.38 0 0 1-.577.039l-2.614-2.556a.435.435 0 0 0-.614.007l-.505.516a.435.435 0 0 0 .007.614l3.887 3.8a.38.38 0 0 0 .577-.039l7.483-9.602a.435.435 0 0 0-.075-.609z"></path>
-                                                </svg>
-                                            </span>
+                                        <div class="_1VfKB _${contact.idLastMessage}">
+                                           
                                         </div>
                                         <span dir="ltr" class="_1wjpf _3NFp9">${contact.lastMessage}</span>
                                         <div class="_3Bxar">
@@ -219,14 +223,32 @@ export class WhatsAppController {
            
                     });
 
-                    this.el.contactsMessagesList.appendChild(contactEl);
+                                                     
+                    if(`_${contact.idLastMessage}` !== '_undefined') {
+                                        
+                        // console.log('mudou ',contactEl)
 
+                        // console.log('contact ',contact)
+                        
+                        let newStatus = Message.getStatusViewElement2(contact.statusLastMessage)
+                        
+
+                        newStatus.classList.add(`_${contact.idLastMessage}`)
+                        
+                         contactEl.querySelector('.last-message').firstElementChild.innerHTML = newStatus.outerHTML;
+
+                    }
+                    
+
+                    // contactEl.querySelector('.last-message').firstElementChild.innerHTML = 
+                    // Message.getStatusViewElement2(contact.messageStatus).outerHTML;
+
+                    this.el.contactsMessagesList.appendChild(contactEl);
                 });
            
             });
-        
+            
             this._user.getContacts();
-   
     }
 
     
@@ -254,6 +276,7 @@ export class WhatsAppController {
         
         this.el.activeName.innerHTML = contact.name;
         this.el.activeStatus.innerHTML = contact.status;
+        
 
         if (contact.photo) {
             let img = this.el.activePhoto;
@@ -284,7 +307,7 @@ export class WhatsAppController {
                 let data = docMsg.data();
                 
                 data.id = docMsg.id;
-                
+                              
                 data.contextChatId = this._activeContact.chatId
 
                 let message = new Message(); 
@@ -308,7 +331,7 @@ export class WhatsAppController {
                 if(!this.el.panelMessagesContainer.querySelector('#_' + data.id)){
                   
                     if (!me) {
-                        // console.log(2)
+                        console.log(2)
                         //Msg lida pelo destinatário.
                         docMsg.ref.set({
                             status: 'read'
@@ -316,15 +339,25 @@ export class WhatsAppController {
                             merge: true
                         });
 
-                        // this.el.activeStatus.innerHTML = 'online';
-                        
+                            // console.log(data)
+               
+                      
+                            // Firebase.db().collection('users').doc(DecodeEncode64.encode64(this._user.email)).collection('contacts').doc(DecodeEncode64.encode64(this._activeContact.email)).set({
+                            //     statusLastMessage: 'read',
+                            //  }, {
+                            //     merge: true
+                            // })
+                            
+                       
+                        // Message.statusMsgLastContac(this._activeContact.chatId, data.id, null, 'read')
+                      
                     }
                     
-                    // console.log(1)
+                    console.log(1)
                     this.el.panelMessagesContainer.appendChild(messageEl);
 
                 } else  {
-                    // console.log(3)                    
+                    console.log(3)                    
                     // Pega o pai dos elemento onde ocorrerá a troca.
                     let parent = this.el.panelMessagesContainer.querySelector('#_' + data.id).parentNode;
 
@@ -334,16 +367,28 @@ export class WhatsAppController {
                 
                                
                 if (this.el.panelMessagesContainer.querySelector('#_' + data.id) && me){
-                    // console.log(4)
+                    console.log(4)
                     //"'#_' + data.id" Id assim para evitar caso o firebase crie id com número da frente, pq os seletores como por exemplo ="querySelector" não aceita id com número da frente.
                    
                     //Se a msg já está na tela eu pego ela 
                     let msgEl = this.el.panelMessagesContainer.querySelector('#_' + data.id)
                     
                     //e atualizo o status dela
-                    msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement().outerHTML;
+                    msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement(data.status).outerHTML;
                 
-                }   
+                }
+
+                // if(document.querySelector('.last-message').querySelector(`#_${contact.idLastMessage}`) && !me) {
+
+                //     console.log(contact)
+                //     let newStatus = Message.getStatusViewElement2(contact.statusLastMessage)
+                        
+
+                //     newStatus.classList.add(`_${contact.idLastMessage}`)
+                    
+                //     document.querySelector('.last-message').firstElementChild.innerHTML = newStatus.outerHTML;
+                    
+                // }
 
                 if (data.type === 'contact') {
 
@@ -511,41 +556,12 @@ export class WhatsAppController {
   initEvents() {
 
 
-        // setTimeout(() => {
+        window.addEventListener('focus', e => {
 
-        //     this.el.activeStatus.innerHTML = '';
-        //     this._active = false;
-        //     this._user.save().then(() => {
-        //         this.el.activeStatus.innerHTML = this._user.status
-        //         this._active = true;
-        //     });
-        //     console.log(this.el.activeStatus)
-        // }, 10000);
-
-        // console.log(this.el.activeStatus)
-
-        // window.addEventListener('focus', e => {
-
-        //     this._user.status = 'online';
+            this._active = true;
             
 
-        //     this._user.save().then(() => {
-
-        //         this.el.activeStatus.innerHTML = 'online';
-        //         this._active = true;
-              
-        //     });
-          
-            
-
-        //     setTimeout(() => {
-
-        //         this.el.activeStatus.innerHTML = '';
-        //         this._active = false;
-        //         console.log(this.el.activeStatus)
-        //     }, 10000);
-            
-        // });
+        });
 
         window.addEventListener('blur', e => {
 
@@ -1110,6 +1126,9 @@ export class WhatsAppController {
         this.el.btnSend.on('click', event => {
 
             Message.send(this._activeContact.chatId, this._user.email, 'text', this.el.inputText.innerHTML);
+
+         
+            // Message.statusMsgLastContac(this._activeContact.chatId)
 
             this.el.inputText.innerHTML = '';
             this.el.panelEmojis.removeClass('open');

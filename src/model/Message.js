@@ -1,15 +1,20 @@
 import { Model } from './Model';
 import { Firebase } from './../util/Firebase';
 import { Format } from '../util/Format';
+import { StatusMessage } from './StatusMessage';
+import { User } from './User';
+import { DecodeEncode64 } from  '../util/DecodeEncode64';
+
 
 export class Message extends Model {
 
     constructor(){
 
         super();
-
+       
         // this._locale = 'pt-BR';
         // this._data = {};
+        
     }
 
     //Esses dados são carregados no Model e é invocado na linha "message.fromJSON(data);" do WhatsAppController.js
@@ -53,9 +58,9 @@ export class Message extends Model {
     get duration() { return this._data.duration; }
     set duration(value) { this._data.duration = value; }
     
-    
+  
     getViewElement(me = true){
-
+       
         let element = document.createElement('div');
         
         element.id = `_${this.id}`
@@ -434,13 +439,7 @@ export class Message extends Model {
 
             classMessage = 'message-out';
 
-            element.querySelector('.message-time').parentElement.appendChild(this.getStatusViewElement());
-
-            // if (this.type === 'image') {
-
-            //     element.querySelector('.message-status').querySelector('path').attributes.fill.nodeValue = '#FFF';
-
-            // }
+            element.querySelector('.message-time').parentElement.appendChild(this.getStatusViewElement(this.status));
 
         }  
 
@@ -497,11 +496,149 @@ export class Message extends Model {
 
         });
   
-    }
+    };
+
+    
+    // static funcUnsubRef(unsubRef){
+        
+    //      console.log()
+    //     return this._unsubRef;
+    
+    // }
+        
+    //  static statusMsgLastContac(chatId, idMessage, sendAndReceived, read) {
+                     
+      
+
+    //          return new Promise((resolve, reject) => { 
+                                               
+    //             let chatRef = Firebase.db().collection('chats').doc(chatId)
+                
+          
+    //             this._unsubRef = chatRef.onSnapshot(snapChat => {
+                   
+    //                 let chatDoc = snapChat.data();
+           
+    //                  chatRef.collection('messages').doc(idMessage).onSnapshot(snapMessage => {
+        
+    //                     let messageDoc = snapMessage.data();
+    //                     const messageFrom = messageDoc.from;
+                                             
+    //                     //Acha que é o destinatário da msg
+    //                     const messageTo = Object.keys(chatDoc.users).filter(userId => { return (userId !== DecodeEncode64.encode64(messageFrom))})[0];
+                         
+                       
+    //                     // this._user = new User(response.user.email)
+    //                     let red =   Firebase.db().collection('users').doc(DecodeEncode64.decode64(messageTo)).collection('contacts').doc(DecodeEncode64.encode64(messageFrom))
+
+                        
+
+    //                     if(sendAndReceived && messageDoc.status === 'read') {
+                            
+    //                         console.log('por ak')
+    //                         red.set({
+    //                             statusLastMessage: 'read',
+    //                          }, {
+    //                             merge: true
+    //                         }).then((e) => {
+                           
+    //                             resolve(e);
+    //                             return true;
+            
+    //                         }).catch(e => {
+    //                           console.log(e)
+    //                           reject(e)
+    //                           throw new Error("User last message not saved.");
+    //                         });
+
+    //                     } else if(sendAndReceived) {
+
+    //                         setTimeout(() => {
+    //                             console.log('chamou de novo')
+    //                             red.set({
+    //                                 idLastMessage: idMessage,
+    //                                 lastMessage: messageDoc.content,
+    //                                 statusLastMessage: 'sent',
+    //                                 lastMessageTime: new Date(),
+    //                              }, {
+    //                                 merge: true
+    //                             }).then((e) => {
+                               
+    //                                 resolve(e);
+    //                                 return  true;
+                
+    //                             }).catch(e => {
+    //                               console.log(e)
+    //                               reject(e)
+    //                               throw new Error("User last message not saved.");
+    //                             });
+                                        
+    //                         }, 1000);
+    
+    //                         setTimeout(() => {
+                               
+    //                             red.set({
+    //                                 statusLastMessage: 'received',
+    //                              }, {
+    //                                 merge: true
+    //                             }).then((e) => {
+                               
+    //                                 resolve(e);
+    //                                 return true;
+                
+    //                             }).catch(e => {
+    //                               console.log(e)
+    //                               reject(e)
+    //                               throw new Error("User last message not saved.");
+    //                             });
+                                        
+    //                         }, 2500); 
+                           
+                            
+                           
+    //                     }
+                        
+    //                     else if(read) {
+                            
+    //                         red.set({
+    //                             statusLastMessage: 'read',
+    //                          }, {
+    //                             merge: true
+    //                         }).then((e) => {
+                           
+    //                             resolve(e);
+    //                             return true;
+            
+    //                         }).catch(e => {
+    //                           console.log(e)
+    //                           reject(e)
+    //                           throw new Error("User last message not saved.");
+    //                         });
+                           
+    //                     } else {
+
+    //                         this._unsubRef();
+
+    //                     }
+
+    //                     sendAndReceived = null;
+    //                     read = null;
+                       
+    //                 });
+        
+    //             });
+       
+    //         });
+               
+    // }
                 
     static send(chatId, from, type, content, setSent = true){
-   
+        
         return new Promise((s, f)=>{
+
+            // this._user = new User(response.user.email)
+            
+
            
             let promiseSent = Message.getRef(chatId).add({
                 content,
@@ -510,14 +647,16 @@ export class Message extends Model {
                 timeStamp: new Date(),
                 status: 'wait'
             });
-           
+            
+            
             
             setTimeout(() => {
                 promiseSent.then(result => {
-                
-                    //Pego o documento que eu acabei de inserir através do elemento pai e muda o status dele.
-                    let docRef = result.parent.doc(result.id);
                     
+                   //Pego o documento que eu acabei de inserir através do elemento pai e muda o status dele.
+                 
+                    let docRef = result.parent.doc(result.id);
+                   
                     docRef.set({
                         status: 'sent'
                     }, {
@@ -525,12 +664,19 @@ export class Message extends Model {
                     })
                     
                     s(docRef);
+
+                   
+                //    Message.statusMsgLastContac(chatId, result.id, 'sendAndReceived', null);
+                  
+                  
+              
     
                 }).catch(err=>{ f(err); });
               
-            }, 2500); 
-                
-            
+            }, 1000);
+
+
+               
             
             setTimeout(() => {
                 promiseSent.then(result => {
@@ -545,11 +691,16 @@ export class Message extends Model {
                         })
                     
                         s(docRef);
-    
+                        
+   
                     }).catch(err=>{ f(err); });
-            
-               }, 5000);
-        })
+           
+               }, 2500);
+               
+        });
+        
+        
+       
     }
 
     static sendContact(chatId, from, contact){
@@ -645,6 +796,8 @@ export class Message extends Model {
 
         messageStatusEl.classList.add('message-status');
 
+        // statusMessage && (this.status = statusMessage)
+
         switch (this.status) {
 
             case 'wait':
@@ -692,6 +845,64 @@ export class Message extends Model {
         return messageStatusEl;
 
     }
+
+    static getStatusViewElement2(statusMessage){
+
+        let messageStatusEl = document.createElement('div');
+
+        messageStatusEl.classList.add('message-status');
+
+        statusMessage && (this.status = statusMessage)
+
+        switch (this.status) {
+
+            case 'wait':
+                messageStatusEl.innerHTML = `
+                        <span data-icon="msg-time">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 15" width="16" height="15">
+                                <path fill="#859479" d="M9.75 7.713H8.244V5.359a.5.5 0 0 0-.5-.5H7.65a.5.5 0 0 0-.5.5v2.947a.5.5 0 0 0 .5.5h.094l.003-.001.003.002h2a.5.5 0 0 0 .5-.5v-.094a.5.5 0 0 0-.5-.5zm0-5.263h-3.5c-1.82 0-3.3 1.48-3.3 3.3v3.5c0 1.82 1.48 3.3 3.3 3.3h3.5c1.82 0 3.3-1.48 3.3-3.3v-3.5c0-1.82-1.48-3.3-3.3-3.3zm2 6.8a2 2 0 0 1-2 2h-3.5a2 2 0 0 1-2-2v-3.5a2 2 0 0 1 2-2h3.5a2 2 0 0 1 2 2v3.5z"></path>
+                            </svg>
+                        </span>
+                    `;
+                break;
+
+            case 'sent':
+                messageStatusEl.innerHTML = `
+                        <span data-icon="msg-check" class="">
+                            <svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 15" width="16" height="15">
+                                <path fill="#92A58C" d="M10.91 3.316l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z"></path>
+                            </svg>
+                        </span>
+                    `;
+                break;
+
+            case 'received':
+                messageStatusEl.innerHTML = `
+                        <span data-icon="msg-dblcheck">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 15" width="16" height="15">
+                                <path fill="#92A58C" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z"></path>
+                            </svg>
+                        </span>
+                    `;
+                break;
+
+            case 'read':
+                messageStatusEl.innerHTML = `
+                        <span data-icon="msg-dblcheck-ack">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 15" width="16" height="15">
+                                <path fill="#4FC3F7" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z"></path>
+                            </svg>
+                        </span>
+                    `;
+                break;
+
+        }
+
+        return messageStatusEl;
+
+    }
+
+    
 
 }
     
