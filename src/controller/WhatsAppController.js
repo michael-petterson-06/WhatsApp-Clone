@@ -220,16 +220,12 @@ export class WhatsAppController {
                     contactEl.on('click', event => {
                        
                         this.setActiveChat(contact)
-           
+                        
                     });
 
                                                      
                     if(`_${contact.idLastMessage}` !== '_undefined') {
-                                        
-                        // console.log('mudou ',contactEl)
-
-                        // console.log('contact ',contact)
-                        
+                                                                    
                         let newStatus = Message.getStatusViewElement2(contact.statusLastMessage)
                         
 
@@ -258,12 +254,13 @@ export class WhatsAppController {
         if (this._activeContact) {
             
             // Isso não funcionou para zerar os onSnapshot anteriores 
+            Message.getRef(this._activeContact.chatId).onSnapshot(() => {});
             // Message.getRef(this._activeContact.chatId).onSnapshot(() => {});
              
             //Isso funcionou só com o try-cath
             try {
          
-                this._unsubRef()      
+                this._unsubRef()
                 
             } catch (error) {
          
@@ -286,157 +283,164 @@ export class WhatsAppController {
         
         this.el.panelMessagesContainer.innerHTML = '';
 
-        this._messagesReceived = [];
+        this._contactMessagesReceived = [];
+        this._userMessagesReceived = [];
+
+
+        this._unsubRef = Message.getRef(this._activeContact.chatId).orderBy("timeStamp").
+        onSnapshot((docs) => {
+           
+                 //  const user = snap.data();
+
+                    Message.statusMsgLastContac(docs, this._user, contact, this._activeContact.chatId)
+                                      
+                    //Altura  do scroll
+                    let scrollTop = this.el.panelMessagesContainer.scrollTop;
+                  
+                    //O tamanho máximo de msg sem acionar a bara de rolamento
+                    let scrollTopMax = this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight;
+        
+                    //Se altura ultrapassar o máximo "autoScroll recebe true"
+                    let autoScroll = (scrollTop >= scrollTopMax);
+                    
+                    
+                    docs.forEach(docMsg => {
+                        
+                        let data = docMsg.data();
+                        
+                        data.id = docMsg.id;
+                                      
+                        data.contextChatId = this._activeContact.chatId
+        
+                        let message = new Message(); 
+        
+                        message.fromJSON(data);
+                    
+                        let me = (data.from === this._user.email);
+                        
+                        //Se não existir nada no array - as msg do banco não notificão pq o status estará ativo quando eu clicar no contato.
+                        if (!this._contactMessagesReceived.filter(id => { return (id === data.id) }).length && !me) {
+                            
+                            // this.notification(data);
+        
+                            this._contactMessagesReceived.push(data.id);
+                                         
+                        }
+                       
+                        let messageEl = message.getViewElement(me);
+                        
+                    // console.log(data)
+                        
+                        //Se não tiver mostrando essa msg, então mostre.
+                        if(!this.el.panelMessagesContainer.querySelector('#_' + data.id)){
+                          
+                            if (!me) {
+                                // console.log(2)
+                                //Msg lida pelo destinatário.
+
+                                setTimeout(() => {
+
+                                    docMsg.ref.set({
+                                        status: 'read'
+                                    }, {
+                                        merge: true
+                                    });
+                                    
+                                }, 1000)
+
+                                
+                            }
+                            
+                            // console.log(1)
+                            
+                            this.el.panelMessagesContainer.appendChild(messageEl);
+                                      
+        
+                        } else  {
+                            // console.log(3)                    
+                            // Pega o pai dos elemento onde ocorrerá a troca.
+                            let parent = this.el.panelMessagesContainer.querySelector('#_' + data.id).parentNode;
+        
+                            // E substitui um elemento pelo outro usando (replaceChild).
+                            parent.replaceChild(messageEl, this.el.panelMessagesContainer.querySelector('#_' + data.id))
+                        }
+                        
+                                       
+                        if (this.el.panelMessagesContainer.querySelector('#_' + data.id) && me){
+                            
+                            //"'#_' + data.id" Id assim para evitar caso o firebase crie id com número da frente, pq os seletores como por exemplo ="querySelector" não aceita id com número da frente.
+        
+                            let msgEl = this.el.panelMessagesContainer.querySelector('#_' + data.id)
+                                    
+                            //e atualizo o status dela
+                            msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement(data.status).outerHTML;
+           
+                        }
+        
+                        // if(document.querySelector('.last-message').querySelector(`#_${contact.idLastMessage}`) && !me) {
+        
+                        //     console.log(contact)
+                        //     let newStatus = Message.getStatusViewElement2(contact.statusLastMessage)
+                                
+        
+                        //     newStatus.classList.add(`_${contact.idLastMessage}`)
+                            
+                        //     document.querySelector('.last-message').firstElementChild.innerHTML = newStatus.outerHTML;
+                            
+                        // }
+        
+                        if (data.type === 'contact') {
+        
+                            messageEl.querySelector('.btn-message-send').on('click', e => {
+        
+                                //Criando um chat com a pessoa logada e contato enviado ou recebido
+                                Chat.createIfNotExists(this._user.email, data.content.email).then(chat => {
+        
+                                    //Preciso de um objeto da classe User para enviar no addContact
+                                    let contact = new User(data.content.email);
+                                    
+                                    contact.on('datachange', userData => {
+        
+                                        //Contato enviado recebe chatID
+                                        contact.chatId = chat.id;
+                                        
+                                        //Usuário logado adiciona contato recebido, caso exista vai ignorar
+                                        this._user.addContact(contact);
+        
+                                        //Usuário logado recebe chatId.
+                                        this._user.chatId = chat.id;
+        
+                                        //Contato enviado recebe contado do usuário logado.
+                                        contact.addContact(this._user);
+        
+                                        //Cira um novo chat
+                                        this.setActiveChat(contact);
+        
+                                    });
+        
+                                });
+        
+                            });
+        
+                        }
+                    
+                    });
+        
+                    
+        
+                    if (autoScroll) {
+                        //Aumento a altura do scroll
+                        this.el.panelMessagesContainer.scrollTop = (this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight);
+                    } else {
+                        //Deixo a tela parada na altura de onde eu estiver lendo que é no scrollTop atualizado
+                        this.el.panelMessagesContainer.scrollTop = scrollTop;
+                    }
+                
+             
+         })
        
         // "onSnapshot" - Busca a msg no firebase e atualiza na tela
-        this._unsubRef = Message.getRef(this._activeContact.chatId).orderBy("timeStamp").
-        onSnapshot(docs => {
-                   
-            //Altura  do scroll
-            let scrollTop = this.el.panelMessagesContainer.scrollTop;
-          
-            //O tamanho máximo de msg sem acionar a bara de rolamento
-            let scrollTopMax = this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight;
-
-            //Se altura ultrapassar o máximo "autoScroll recebe true"
-            let autoScroll = (scrollTop >= scrollTopMax);
-            
-            
-            docs.forEach(docMsg => {
-                
-                let data = docMsg.data();
-                
-                data.id = docMsg.id;
-                              
-                data.contextChatId = this._activeContact.chatId
-
-                let message = new Message(); 
-
-                message.fromJSON(data);
-            
-                let me = (data.from === this._user.email);
-                
-                //Se não existir nada no array
-                if (!this._messagesReceived.filter(id => { return (id === data.id) }).length) {
-                    
-                    // this.notification(data);
-
-                    this._messagesReceived.push(data.id);
-                                 
-                }
-               
-                let messageEl = message.getViewElement(me);
-               
-                //Se não tiver mostrando essa msg, então mostre.
-                if(!this.el.panelMessagesContainer.querySelector('#_' + data.id)){
-                  
-                    if (!me) {
-                        console.log(2)
-                        //Msg lida pelo destinatário.
-                        docMsg.ref.set({
-                            status: 'read'
-                        }, {
-                            merge: true
-                        });
-
-                            // console.log(data)
-               
-                      
-                            // Firebase.db().collection('users').doc(DecodeEncode64.encode64(this._user.email)).collection('contacts').doc(DecodeEncode64.encode64(this._activeContact.email)).set({
-                            //     statusLastMessage: 'read',
-                            //  }, {
-                            //     merge: true
-                            // })
-                            
-                       
-                        // Message.statusMsgLastContac(this._activeContact.chatId, data.id, null, 'read')
-                      
-                    }
-                    
-                    console.log(1)
-                    this.el.panelMessagesContainer.appendChild(messageEl);
-
-                } else  {
-                    console.log(3)                    
-                    // Pega o pai dos elemento onde ocorrerá a troca.
-                    let parent = this.el.panelMessagesContainer.querySelector('#_' + data.id).parentNode;
-
-                    // E substitui um elemento pelo outro usando (replaceChild).
-                    parent.replaceChild(messageEl, this.el.panelMessagesContainer.querySelector('#_' + data.id))
-                }
-                
-                               
-                if (this.el.panelMessagesContainer.querySelector('#_' + data.id) && me){
-                    console.log(4)
-                    //"'#_' + data.id" Id assim para evitar caso o firebase crie id com número da frente, pq os seletores como por exemplo ="querySelector" não aceita id com número da frente.
-                   
-                    //Se a msg já está na tela eu pego ela 
-                    let msgEl = this.el.panelMessagesContainer.querySelector('#_' + data.id)
-                    
-                    //e atualizo o status dela
-                    msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement(data.status).outerHTML;
-                
-                }
-
-                // if(document.querySelector('.last-message').querySelector(`#_${contact.idLastMessage}`) && !me) {
-
-                //     console.log(contact)
-                //     let newStatus = Message.getStatusViewElement2(contact.statusLastMessage)
-                        
-
-                //     newStatus.classList.add(`_${contact.idLastMessage}`)
-                    
-                //     document.querySelector('.last-message').firstElementChild.innerHTML = newStatus.outerHTML;
-                    
-                // }
-
-                if (data.type === 'contact') {
-
-                    messageEl.querySelector('.btn-message-send').on('click', e => {
-
-                        //Criando um chat com a pessoa logada e contato enviado ou recebido
-                        Chat.createIfNotExists(this._user.email, data.content.email).then(chat => {
-
-                            //Preciso de um objeto da classe User para enviar no addContact
-                            let contact = new User(data.content.email);
-                            
-                            contact.on('datachange', userData => {
-
-                                //Contato enviado recebe chatID
-                                contact.chatId = chat.id;
-                                
-                                //Usuário logado adiciona contato recebido, caso exista vai ignorar
-                                this._user.addContact(contact);
-
-                                //Usuário logado recebe chatId.
-                                this._user.chatId = chat.id;
-
-                                //Contato enviado recebe contado do usuário logado.
-                                contact.addContact(this._user);
-
-                                //Cira um novo chat
-                                this.setActiveChat(contact);
-
-                            });
-
-                        });
-
-                    });
-
-                }
-            
-            });
-
-            
-
-            if (autoScroll) {
-                //Aumento a altura do scroll
-                this.el.panelMessagesContainer.scrollTop = (this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight);
-            } else {
-                //Deixo a tela parada na altura de onde eu estiver lendo que é no scrollTop atualizado
-                this.el.panelMessagesContainer.scrollTop = scrollTop;
-            }
-        });
+      
        
 
         this.el.home.hide();
@@ -559,14 +563,12 @@ export class WhatsAppController {
         window.addEventListener('focus', e => {
 
             this._active = true;
-            
 
         });
 
         window.addEventListener('blur', e => {
 
             this._active = false;
-            
 
         });
 
@@ -1126,13 +1128,11 @@ export class WhatsAppController {
         this.el.btnSend.on('click', event => {
 
             Message.send(this._activeContact.chatId, this._user.email, 'text', this.el.inputText.innerHTML);
-
          
             // Message.statusMsgLastContac(this._activeContact.chatId)
 
             this.el.inputText.innerHTML = '';
             this.el.panelEmojis.removeClass('open');
-            
 
         });
 

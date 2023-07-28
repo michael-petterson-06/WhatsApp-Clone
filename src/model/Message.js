@@ -499,147 +499,86 @@ export class Message extends Model {
     };
 
     
-    // static funcUnsubRef(unsubRef){
+    static structuralMsg(docs, chatId){
         
-    //      console.log()
-    //     return this._unsubRef;
-    
-    // }
+        const arrayMsgs = []
         
-    //  static statusMsgLastContac(chatId, idMessage, sendAndReceived, read) {
-                     
-      
+        docs.forEach(docMsg => {
+                 
+            let data = docMsg.data();
+                        
+            data.id = docMsg.id;
+                          
+            data.contextChatId = chatId;
 
-    //          return new Promise((resolve, reject) => { 
-                                               
-    //             let chatRef = Firebase.db().collection('chats').doc(chatId)
-                
-          
-    //             this._unsubRef = chatRef.onSnapshot(snapChat => {
-                   
-    //                 let chatDoc = snapChat.data();
+            arrayMsgs.push(data)
+            
+        });
            
-    //                  chatRef.collection('messages').doc(idMessage).onSnapshot(snapMessage => {
-        
-    //                     let messageDoc = snapMessage.data();
-    //                     const messageFrom = messageDoc.from;
-                                             
-    //                     //Acha que é o destinatário da msg
-    //                     const messageTo = Object.keys(chatDoc.users).filter(userId => { return (userId !== DecodeEncode64.encode64(messageFrom))})[0];
-                         
-                       
-    //                     // this._user = new User(response.user.email)
-    //                     let red =   Firebase.db().collection('users').doc(DecodeEncode64.decode64(messageTo)).collection('contacts').doc(DecodeEncode64.encode64(messageFrom))
-
-                        
-
-    //                     if(sendAndReceived && messageDoc.status === 'read') {
-                            
-    //                         console.log('por ak')
-    //                         red.set({
-    //                             statusLastMessage: 'read',
-    //                          }, {
-    //                             merge: true
-    //                         }).then((e) => {
-                           
-    //                             resolve(e);
-    //                             return true;
-            
-    //                         }).catch(e => {
-    //                           console.log(e)
-    //                           reject(e)
-    //                           throw new Error("User last message not saved.");
-    //                         });
-
-    //                     } else if(sendAndReceived) {
-
-    //                         setTimeout(() => {
-    //                             console.log('chamou de novo')
-    //                             red.set({
-    //                                 idLastMessage: idMessage,
-    //                                 lastMessage: messageDoc.content,
-    //                                 statusLastMessage: 'sent',
-    //                                 lastMessageTime: new Date(),
-    //                              }, {
-    //                                 merge: true
-    //                             }).then((e) => {
-                               
-    //                                 resolve(e);
-    //                                 return  true;
-                
-    //                             }).catch(e => {
-    //                               console.log(e)
-    //                               reject(e)
-    //                               throw new Error("User last message not saved.");
-    //                             });
-                                        
-    //                         }, 1000);
+        return arrayMsgs;
     
-    //                         setTimeout(() => {
-                               
-    //                             red.set({
-    //                                 statusLastMessage: 'received',
-    //                              }, {
-    //                                 merge: true
-    //                             }).then((e) => {
-                               
-    //                                 resolve(e);
-    //                                 return true;
-                
-    //                             }).catch(e => {
-    //                               console.log(e)
-    //                               reject(e)
-    //                               throw new Error("User last message not saved.");
-    //                             });
-                                        
-    //                         }, 2500); 
-                           
-                            
-                           
-    //                     }
-                        
-    //                     else if(read) {
-                            
-    //                         red.set({
-    //                             statusLastMessage: 'read',
-    //                          }, {
-    //                             merge: true
-    //                         }).then((e) => {
-                           
-    //                             resolve(e);
-    //                             return true;
-            
-    //                         }).catch(e => {
-    //                           console.log(e)
-    //                           reject(e)
-    //                           throw new Error("User last message not saved.");
-    //                         });
-                           
-    //                     } else {
+    }
 
-    //                         this._unsubRef();
+   
+    //  static statusMsgLastContac(chatId, idMessage, sendAndReceived, read) {
+    static statusMsgLastContac(docs, user, contact, chatId) {
 
-    //                     }
-
-    //                     sendAndReceived = null;
-    //                     read = null;
-                       
-    //                 });
+        // let me = (data.from === user.email);
         
-    //             });
-       
-    //         });
-               
-    // }
+        const arrayMsgs  = Message.structuralMsg(docs, chatId)
+        
+        const lastMessage = arrayMsgs[arrayMsgs.length - 1]
+     
+        if(lastMessage) {
+
+            return new Promise((resolve, reject) => { 
+
+                let chatRef = Firebase.db().collection('chats').doc(chatId);
+
+                this._unsubRef = chatRef.onSnapshot(snapChat => {
+                    
+                    let chatDoc = snapChat.data();
+        
+                     chatRef.collection('messages').doc(lastMessage.id).onSnapshot(snapMessage => {
+
+                        // this._user = new User(response.user.email)
+                        let ref = Firebase.db().collection('users').doc((contact.email)).collection('contacts').doc(DecodeEncode64.encode64(user.email));
+                        console.log(lastMessage)
+                        console.log(ref)
+                                                                                      
+                        if (lastMessage.status === 'received') { 
+                            ref.set({
+                                idLastMessage: lastMessage.id,
+                                lastMessage: lastMessage.content,
+                                statusLastMessage: 'received',
+                                lastMessageTime: new Date(),
+                                }, {
+                                merge: true
+                            })
+                        } 
+                        
+                        else if (lastMessage.status === 'read') {
+    
+                            ref.set({
+                                statusLastMessage: 'read',
+                                }, {
+                                merge: true,
+                            })
+                        };                    
+                    });        
+                });    
+            });
+        }
+      
+   
+    };
                 
-    static send(chatId, from, type, content, setSent = true){
+    static send(chatId, from, type, content){
         
         return new Promise((s, f)=>{
 
             // this._user = new User(response.user.email)
             
-
-           
             let promiseSent = Message.getRef(chatId).add({
                 content,
                 from,
@@ -650,7 +589,7 @@ export class Message extends Model {
             
             
             
-            setTimeout(() => {
+        
                 promiseSent.then(result => {
                     
                    //Pego o documento que eu acabei de inserir através do elemento pai e muda o status dele.
@@ -665,6 +604,15 @@ export class Message extends Model {
                     
                     s(docRef);
 
+
+                    docRef.set({
+                        status: 'received'
+                    }, {
+                        merge: true
+                    })
+                    
+                    s(docRef);
+
                    
                 //    Message.statusMsgLastContac(chatId, result.id, 'sendAndReceived', null);
                   
@@ -673,29 +621,11 @@ export class Message extends Model {
     
                 }).catch(err=>{ f(err); });
               
-            }, 1000);
+           
 
 
                
-            
-            setTimeout(() => {
-                promiseSent.then(result => {
-                    
-                    //Pego o documento que eu acabei de inserir através do elemento pai e muda o status dele.
-                    let docRef = result.parent.doc(result.id);
-                
-                        docRef.set({
-                            status: 'received'
-                        }, {
-                            merge: true
-                        })
-                    
-                        s(docRef);
-                        
-   
-                    }).catch(err=>{ f(err); });
            
-               }, 2500);
                
         });
         

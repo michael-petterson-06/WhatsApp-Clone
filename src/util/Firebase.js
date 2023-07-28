@@ -58,6 +58,7 @@ export class Firebase {
 
     }
 
+    
     static db(){
 
         return firebase.firestore();
