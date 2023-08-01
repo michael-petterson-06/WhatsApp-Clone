@@ -30,7 +30,10 @@ export class User extends Model {
     get uid() { return this._data.uid; }
     set uid(value) { this._data.uid = value; }
 
+    get statusUser() { return this._data.statusUser; }
+    set statusUser(value) { this._data.statusUser = value; }
 
+    
 
     getById(userEmail){
         return new Promise((s, f)=>{
@@ -38,25 +41,28 @@ export class User extends Model {
             User.findByEmail(userEmail).onSnapshot(doc => {
 
                 this.fromJSON(doc.data());
-              
-                s(doc);
 
             })
         });        
     }
 
     static getRef(){
+
         return Firebase.db().collection('/users');
+
     }
            
     static findByEmail(email){
+
         return User.getRef().doc(email);
+        
     }
 
+  
     save(){
 
         return User.findByEmail(this.email).set(this.toJSON());
-
+        
     }
 
    
@@ -84,7 +90,7 @@ export class User extends Model {
                 });
 
                 this.trigger('contactschange', docs);
-                
+             
                 s(contacts);
             });
 

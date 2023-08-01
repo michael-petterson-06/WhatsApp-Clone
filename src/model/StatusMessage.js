@@ -7,10 +7,7 @@ export class StatusMessage {
 
     messageStatusEl.classList.add('message-status');
 
-    console.log(statusMessage)
-
     switch (statusMessage) {
-
       
         case 'wait':
             messageStatusEl.innerHTML = `

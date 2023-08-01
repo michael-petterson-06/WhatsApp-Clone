@@ -26,11 +26,6 @@ export class ClassEvent {
 
           this._events[eventName].forEach(fn => {
 
-              // fn.apply(null, args, {
-              //     type: eventName,
-              //     timeStamp: new Date().getTime()
-              // });
-              console.log('Trigger', args)
               fn.apply(null, args)
 
           });

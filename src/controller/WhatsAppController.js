@@ -9,7 +9,7 @@ import { Message } from '../model/Message';
 import { Base64 } from '../util/Base64';
 import { ContactsController } from './ContactsController';
 import { StatusMessage } from '../model/StatusMessage';
-import { DecodeEncode64 } from '../util/DecodeEncode64';
+
 
 
 export class WhatsAppController {
@@ -17,6 +17,7 @@ export class WhatsAppController {
     constructor() {
         
         this._active = true;
+        this._clear;
         this._firebase = new Firebase();
         this.initAuth();
         this.elementsPrototype();
@@ -123,15 +124,28 @@ export class WhatsAppController {
             this._user.name = response.user.displayName;
             this._user.email = response.user.email;
             this._user.photo = response.user.photoURL;
-            // this._user.status = 'online';
+            this._user.statusUser = 'online';
             this._user.uid = response.user.uid 
-           
+          
             this._user.save().then(() => {
+                
                 this.el.appContent.css({
                     display: 'flex'
-                })
+                });
             });
-        
+
+            if(this._clear) clearTimeout(this._clear);
+   
+            this._clear = setTimeout(() => {
+                
+                this._user.statusUser = 'Desconectar';
+
+                this._user.save()
+
+            }, 5000);
+            
+            
+             
         }).catch(err => {
             console.error(err);
         });
@@ -140,121 +154,122 @@ export class WhatsAppController {
     
     initContacts() {    
 
-            this._arrayLastMsgReceived = [];
+        this._arrayLastMsgReceived = [];
                   
-            this._user.on('contactschange', docs => {
+        this._user.on('contactschange', docs => {
                 
                 
-                this.el.contactsMessagesList.innerHTML = '';
+            this.el.contactsMessagesList.innerHTML = '';
                 
-              
-                docs.forEach(doc => {
-                    
-                    let contact = doc.data()
-                                       
-                    let contactEl = document.createElement('div');
-
-                    contact.lastMessage ? contact.lastMessage = contact.lastMessage : contact.lastMessage = 'Sem mensagens';
-                              
-                    
-                    contactEl.classList.add('contact-item')
-                    // contactEl.classList.add(`_${contact.chatId}`)
-                    
-                    // console.log(contact)
-                                                       
-                    contactEl.innerHTML = `
-                        <div class="dIyEr">
-                            <div class="_1WliW" style="height: 49px; width: 49px;">
-                                <img src="#" class="Qgzj8 gqwaM photo" style="display:none;">
-                                <div class="_3ZW2E">
-                                    <span data-icon="default-user" class="">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 212 212" width="212" height="212">
-                                            <path fill="#DFE5E7" d="M106.251.5C164.653.5 212 47.846 212 106.25S164.653 212 106.25 212C47.846 212 .5 164.654.5 106.25S47.846.5 106.251.5z"></path>
-                                            <g fill="#FFF">
-                                                <path d="M173.561 171.615a62.767 62.767 0 0 0-2.065-2.955 67.7 67.7 0 0 0-2.608-3.299 70.112 70.112 0 0 0-3.184-3.527 71.097 71.097 0 0 0-5.924-5.47 72.458 72.458 0 0 0-10.204-7.026 75.2 75.2 0 0 0-5.98-3.055c-.062-.028-.118-.059-.18-.087-9.792-4.44-22.106-7.529-37.416-7.529s-27.624 3.089-37.416 7.529c-.338.153-.653.318-.985.474a75.37 75.37 0 0 0-6.229 3.298 72.589 72.589 0 0 0-9.15 6.395 71.243 71.243 0 0 0-5.924 5.47 70.064 70.064 0 0 0-3.184 3.527 67.142 67.142 0 0 0-2.609 3.299 63.292 63.292 0 0 0-2.065 2.955 56.33 56.33 0 0 0-1.447 2.324c-.033.056-.073.119-.104.174a47.92 47.92 0 0 0-1.07 1.926c-.559 1.068-.818 1.678-.818 1.678v.398c18.285 17.927 43.322 28.985 70.945 28.985 27.678 0 52.761-11.103 71.055-29.095v-.289s-.619-1.45-1.992-3.778a58.346 58.346 0 0 0-1.446-2.322zM106.002 125.5c2.645 0 5.212-.253 7.68-.737a38.272 38.272 0 0 0 3.624-.896 37.124 37.124 0 0 0 5.12-1.958 36.307 36.307 0 0 0 6.15-3.67 35.923 35.923 0 0 0 9.489-10.48 36.558 36.558 0 0 0 2.422-4.84 37.051 37.051 0 0 0 1.716-5.25c.299-1.208.542-2.443.725-3.701.275-1.887.417-3.827.417-5.811s-.142-3.925-.417-5.811a38.734 38.734 0 0 0-1.215-5.494 36.68 36.68 0 0 0-3.648-8.298 35.923 35.923 0 0 0-9.489-10.48 36.347 36.347 0 0 0-6.15-3.67 37.124 37.124 0 0 0-5.12-1.958 37.67 37.67 0 0 0-3.624-.896 39.875 39.875 0 0 0-7.68-.737c-21.162 0-37.345 16.183-37.345 37.345 0 21.159 16.183 37.342 37.345 37.342z"></path>
-                                            </g>
-                                        </svg>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="_3j7s9">
-                            <div class="_2FBdJ">
-                                <div class="_25Ooe">
-                                    <span dir="auto" title=${contact.name} class="_1wjpf">${contact.name}</span>
-                                </div>
-                                <div class="_3Bxar">
-                                    <span class="_3T2VG">${Format.fbTimeStampToTime(contact.lastMessageTime)}</span>
-                               </div>
-                            </div>
-                            <div class="_1AwDx">
-                                <div class="_itDl">
-                                    <span title="digitando…" class="vdXUe _1wjpf typing" style="display:none">digitando…</span>
-
-                                    <span class="_2_LEW last-message">
-                                        <div class="_1VfKB _${contact.idLastMessage}">
-                                           
-                                        </div>
-                                        <span dir="ltr" class="_1wjpf _3NFp9">${contact.lastMessage}</span>
-                                        <div class="_3Bxar">
-                                            <span>
-                                                <div class="_15G96">
-                                                    <span class="OUeyt messages-count-new" style="display:none;">1</span>
-                                                </div>
-                                        </span></div>
-                                        </span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-
-                    if (contact.photo) {
-
-                        let img = contactEl.querySelector('.photo');
-
-                        img.src = contact.photo;
-                        img.show();
-
-                    }   
-
-                    contactEl.on('click', event => {
-                       
-                        this.setActiveChat(contact)
-                        
-                    });
-
-                                                     
-                    if(`_${contact.idLastMessage}` !== '_undefined') {
-                                                                    
-                        let newStatus = Message.getStatusViewElement2(contact.statusLastMessage)
-                        
-
-                        newStatus.classList.add(`_${contact.idLastMessage}`)
-                        
-                         contactEl.querySelector('.last-message').firstElementChild.innerHTML = newStatus.outerHTML;
-
-                    }
-                    
-
-                    // contactEl.querySelector('.last-message').firstElementChild.innerHTML = 
-                    // Message.getStatusViewElement2(contact.messageStatus).outerHTML;
-
-                    this.el.contactsMessagesList.appendChild(contactEl);
-                });
-           
-            });
             
-            this._user.getContacts();
+            docs.forEach(doc => {
+                    
+                let contact = doc.data();
+
+                contact.id = doc.id;
+
+                // contact.statusUser = this._user.statusUser
+                                    
+                let contactEl = document.createElement('div');
+
+                contact.lastMessage ? contact.lastMessage = contact.lastMessage : contact.lastMessage = 'Sem mensagens';
+                            
+                
+                contactEl.classList.add('contact-item')
+                // contactEl.classList.add(`_${contact.chatId}`)
+                
+                // console.log(contact)
+                                                    
+                contactEl.innerHTML = `
+                    <div class="dIyEr">
+                        <div class="_1WliW" style="height: 49px; width: 49px;">
+                            <img src="#" class="Qgzj8 gqwaM photo" style="display:none;">
+                            <div class="_3ZW2E">
+                                <span data-icon="default-user" class="">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 212 212" width="212" height="212">
+                                        <path fill="#DFE5E7" d="M106.251.5C164.653.5 212 47.846 212 106.25S164.653 212 106.25 212C47.846 212 .5 164.654.5 106.25S47.846.5 106.251.5z"></path>
+                                        <g fill="#FFF">
+                                            <path d="M173.561 171.615a62.767 62.767 0 0 0-2.065-2.955 67.7 67.7 0 0 0-2.608-3.299 70.112 70.112 0 0 0-3.184-3.527 71.097 71.097 0 0 0-5.924-5.47 72.458 72.458 0 0 0-10.204-7.026 75.2 75.2 0 0 0-5.98-3.055c-.062-.028-.118-.059-.18-.087-9.792-4.44-22.106-7.529-37.416-7.529s-27.624 3.089-37.416 7.529c-.338.153-.653.318-.985.474a75.37 75.37 0 0 0-6.229 3.298 72.589 72.589 0 0 0-9.15 6.395 71.243 71.243 0 0 0-5.924 5.47 70.064 70.064 0 0 0-3.184 3.527 67.142 67.142 0 0 0-2.609 3.299 63.292 63.292 0 0 0-2.065 2.955 56.33 56.33 0 0 0-1.447 2.324c-.033.056-.073.119-.104.174a47.92 47.92 0 0 0-1.07 1.926c-.559 1.068-.818 1.678-.818 1.678v.398c18.285 17.927 43.322 28.985 70.945 28.985 27.678 0 52.761-11.103 71.055-29.095v-.289s-.619-1.45-1.992-3.778a58.346 58.346 0 0 0-1.446-2.322zM106.002 125.5c2.645 0 5.212-.253 7.68-.737a38.272 38.272 0 0 0 3.624-.896 37.124 37.124 0 0 0 5.12-1.958 36.307 36.307 0 0 0 6.15-3.67 35.923 35.923 0 0 0 9.489-10.48 36.558 36.558 0 0 0 2.422-4.84 37.051 37.051 0 0 0 1.716-5.25c.299-1.208.542-2.443.725-3.701.275-1.887.417-3.827.417-5.811s-.142-3.925-.417-5.811a38.734 38.734 0 0 0-1.215-5.494 36.68 36.68 0 0 0-3.648-8.298 35.923 35.923 0 0 0-9.489-10.48 36.347 36.347 0 0 0-6.15-3.67 37.124 37.124 0 0 0-5.12-1.958 37.67 37.67 0 0 0-3.624-.896 39.875 39.875 0 0 0-7.68-.737c-21.162 0-37.345 16.183-37.345 37.345 0 21.159 16.183 37.342 37.345 37.342z"></path>
+                                        </g>
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="_3j7s9">
+                        <div class="_2FBdJ">
+                            <div class="_25Ooe">
+                                <span dir="auto" title=${contact.name} class="_1wjpf">${contact.name}</span>
+                            </div>
+                            <div class="_3Bxar">
+                                <span class="_3T2VG">${Format.fbTimeStampToTime(contact.lastMessageTime)}</span>
+                            </div>
+                        </div>
+                        <div class="_1AwDx">
+                            <div class="_itDl">
+                                <span title="digitando…" class="vdXUe _1wjpf typing" style="display:none">digitando…</span>
+
+                                <span class="_2_LEW last-message">
+                                    <div class="_1VfKB _${contact.idLastMessage}">
+                                        
+                                    </div>
+                                    <span dir="ltr" class="_1wjpf _3NFp9">${contact.lastMessage}</span>
+                                    <div class="_3Bxar">
+                                        <span>
+                                            <div class="_15G96">
+                                                <span class="OUeyt messages-count-new" style="display:none;">1</span>
+                                            </div>
+                                    </span></div>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                if (contact.photo) {
+
+                    let img = contactEl.querySelector('.photo');
+
+                    img.src = contact.photo;
+                    img.show();
+
+                }   
+
+                contactEl.on('click', event => {
+                    
+                    this.setActiveChat(contact)
+                    
+                });
+
+                                                    
+                if(`_${contact.idLastMessage}` !== '_undefined') {
+                                                                
+                    let newStatus = StatusMessage.getStatusViewElement(contact.statusLastMessage)
+                    
+
+                    newStatus.classList.add(`_${contact.idLastMessage}`)
+                    
+                    contactEl.querySelector('.last-message').firstElementChild.innerHTML = newStatus.outerHTML;
+
+                }
+                
+                                    
+                this.el.contactsMessagesList.appendChild(contactEl);
+            });
+           
+        });
+            
+        this._user.getContacts();
     }
 
     
 
     setActiveChat(contact){
-            
+        
         if (this._activeContact) {
             
             // Isso não funcionou para zerar os onSnapshot anteriores 
-            Message.getRef(this._activeContact.chatId).onSnapshot(() => {});
+            // Message.getRef(this._activeContact.chatId).onSnapshot(() => {});
             // Message.getRef(this._activeContact.chatId).onSnapshot(() => {});
              
             //Isso funcionou só com o try-cath
@@ -266,15 +281,61 @@ export class WhatsAppController {
          
                 console.log(error)
          
-            }
-        }
-      
-        this._activeContact = contact;
-        
-        this.el.activeName.innerHTML = contact.name;
-        this.el.activeStatus.innerHTML = contact.status;
-        
+            };
+        };
 
+        this._activeContact = contact;
+            
+        this.el.activeName.innerHTML = contact.name;
+        
+        this.el.activeStatus.className = 'O90ur ' + contact.id
+        
+        window.addEventListener('click', e => {
+
+            this._userStatus = new User(contact.email);
+
+            this._user.statusUser = 'Online';
+                
+            this._user.save();
+            
+            this._userStatus.on('datachange', data => {
+                
+                       
+                if(this.el.activeStatus.classList.contains(`${contact.id}`)){
+                    this.el.activeStatus.innerHTML = data.statusUser;
+                }
+                
+                if(this.el.activeStatus.innerHTML === 'undefined'){
+                    this.el.activeStatus.innerHTML = 'Desconectado';
+                }
+
+                
+                if(this._clear) clearTimeout(this._clear);
+
+                this._clear = setTimeout(() => {
+                   
+                    this._userStatus = new User(contact.email);
+
+                    this._user.statusUser = 'Desconectar';
+    
+                    this._user.save();
+
+                    if(this.el.activeStatus.classList.contains(`${contact.id}`)){
+                        this.el.activeStatus.innerHTML = data.statusUser;
+                    }
+                                                           
+                    if(this.el.activeStatus.innerHTML === 'undefined'){
+                        this.el.activeStatus.innerHTML = 'Desconectado';
+                    }
+                    
+   
+                }, 5000);
+ 
+            });
+            
+        });
+             
+       
         if (contact.photo) {
             let img = this.el.activePhoto;
             img.src = contact.photo;
@@ -290,164 +351,146 @@ export class WhatsAppController {
         this._unsubRef = Message.getRef(this._activeContact.chatId).orderBy("timeStamp").
         onSnapshot((docs) => {
            
-                 //  const user = snap.data();
+            //  const user = snap.data();
 
-                    Message.statusMsgLastContac(docs, this._user, contact, this._activeContact.chatId)
-                                      
-                    //Altura  do scroll
-                    let scrollTop = this.el.panelMessagesContainer.scrollTop;
-                  
-                    //O tamanho máximo de msg sem acionar a bara de rolamento
-                    let scrollTopMax = this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight;
-        
-                    //Se altura ultrapassar o máximo "autoScroll recebe true"
-                    let autoScroll = (scrollTop >= scrollTopMax);
-                    
-                    
-                    docs.forEach(docMsg => {
-                        
-                        let data = docMsg.data();
-                        
-                        data.id = docMsg.id;
-                                      
-                        data.contextChatId = this._activeContact.chatId
-        
-                        let message = new Message(); 
-        
-                        message.fromJSON(data);
-                    
-                        let me = (data.from === this._user.email);
-                        
-                        //Se não existir nada no array - as msg do banco não notificão pq o status estará ativo quando eu clicar no contato.
-                        if (!this._contactMessagesReceived.filter(id => { return (id === data.id) }).length && !me) {
-                            
-                            // this.notification(data);
-        
-                            this._contactMessagesReceived.push(data.id);
-                                         
-                        }
-                       
-                        let messageEl = message.getViewElement(me);
-                        
-                    // console.log(data)
-                        
-                        //Se não tiver mostrando essa msg, então mostre.
-                        if(!this.el.panelMessagesContainer.querySelector('#_' + data.id)){
-                          
-                            if (!me) {
-                                // console.log(2)
-                                //Msg lida pelo destinatário.
-
-                                setTimeout(() => {
-
-                                    docMsg.ref.set({
-                                        status: 'read'
-                                    }, {
-                                        merge: true
-                                    });
-                                    
-                                }, 1000)
-
+            Message.statusMsgLastContac(docs, this._user, contact, this._activeContact.chatId)
                                 
-                            }
-                            
-                            // console.log(1)
-                            
-                            this.el.panelMessagesContainer.appendChild(messageEl);
-                                      
-        
-                        } else  {
-                            // console.log(3)                    
-                            // Pega o pai dos elemento onde ocorrerá a troca.
-                            let parent = this.el.panelMessagesContainer.querySelector('#_' + data.id).parentNode;
-        
-                            // E substitui um elemento pelo outro usando (replaceChild).
-                            parent.replaceChild(messageEl, this.el.panelMessagesContainer.querySelector('#_' + data.id))
-                        }
-                        
-                                       
-                        if (this.el.panelMessagesContainer.querySelector('#_' + data.id) && me){
-                            
-                            //"'#_' + data.id" Id assim para evitar caso o firebase crie id com número da frente, pq os seletores como por exemplo ="querySelector" não aceita id com número da frente.
-        
-                            let msgEl = this.el.panelMessagesContainer.querySelector('#_' + data.id)
-                                    
-                            //e atualizo o status dela
-                            msgEl.querySelector('.message-status').innerHTML = message.getStatusViewElement(data.status).outerHTML;
-           
-                        }
-        
-                        // if(document.querySelector('.last-message').querySelector(`#_${contact.idLastMessage}`) && !me) {
-        
-                        //     console.log(contact)
-                        //     let newStatus = Message.getStatusViewElement2(contact.statusLastMessage)
-                                
-        
-                        //     newStatus.classList.add(`_${contact.idLastMessage}`)
-                            
-                        //     document.querySelector('.last-message').firstElementChild.innerHTML = newStatus.outerHTML;
-                            
-                        // }
-        
-                        if (data.type === 'contact') {
-        
-                            messageEl.querySelector('.btn-message-send').on('click', e => {
-        
-                                //Criando um chat com a pessoa logada e contato enviado ou recebido
-                                Chat.createIfNotExists(this._user.email, data.content.email).then(chat => {
-        
-                                    //Preciso de um objeto da classe User para enviar no addContact
-                                    let contact = new User(data.content.email);
-                                    
-                                    contact.on('datachange', userData => {
-        
-                                        //Contato enviado recebe chatID
-                                        contact.chatId = chat.id;
-                                        
-                                        //Usuário logado adiciona contato recebido, caso exista vai ignorar
-                                        this._user.addContact(contact);
-        
-                                        //Usuário logado recebe chatId.
-                                        this._user.chatId = chat.id;
-        
-                                        //Contato enviado recebe contado do usuário logado.
-                                        contact.addContact(this._user);
-        
-                                        //Cira um novo chat
-                                        this.setActiveChat(contact);
-        
-                                    });
-        
-                                });
-        
-                            });
-        
-                        }
-                    
-                    });
-        
-                    
-        
-                    if (autoScroll) {
-                        //Aumento a altura do scroll
-                        this.el.panelMessagesContainer.scrollTop = (this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight);
-                    } else {
-                        //Deixo a tela parada na altura de onde eu estiver lendo que é no scrollTop atualizado
-                        this.el.panelMessagesContainer.scrollTop = scrollTop;
-                    }
+            //Altura  do scroll
+            let scrollTop = this.el.panelMessagesContainer.scrollTop;
+            
+            //O tamanho máximo de msg sem acionar a bara de rolamento
+            let scrollTopMax = this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight;
+
+            //Se altura ultrapassar o máximo "autoScroll recebe true"
+            let autoScroll = (scrollTop >= scrollTopMax);
+            
+            
+            docs.forEach(docMsg => {
                 
-             
-         })
+                let data = docMsg.data();
+                
+                data.id = docMsg.id;
+                                
+                data.contextChatId = this._activeContact.chatId
+
+                let message = new Message(); 
+
+                message.fromJSON(data);
+            
+                let me = (data.from === this._user.email);
+                
+                //Se não existir nada no array - as msg do banco não notificão pq o status estará ativo quando eu clicar no contato.
+                if (!this._contactMessagesReceived.filter(id => { return (id === data.id) }).length && !me) {
+                    
+                    // this.notification(data);
+
+                    this._contactMessagesReceived.push(data.id);
+                                    
+                }
+                
+                let messageEl = message.getViewElement(me);
+                
+            // console.log(data)
+                
+                //Se não tiver mostrando essa msg, então mostre.
+                if(!this.el.panelMessagesContainer.querySelector('#_' + data.id)){
+                    
+                    if (!me) {
+                        // console.log(2)
+                        //Msg lida pelo destinatário.
+
+                        setTimeout(() => {
+
+                            docMsg.ref.set({
+                                status: 'read'
+                            }, {
+                                merge: true
+                            });
+                            
+                        }, 1500)
+                        
+                    }
+                    
+                    // console.log(1)
+                    
+                    this.el.panelMessagesContainer.appendChild(messageEl);
+
+                } else  {
+                    // console.log(3)                    
+                    // Pega o pai dos elemento onde ocorrerá a troca.
+                    let parent = this.el.panelMessagesContainer.querySelector('#_' + data.id).parentNode;
+
+                    // E substitui um elemento pelo outro usando (replaceChild).
+                    parent.replaceChild(messageEl, this.el.panelMessagesContainer.querySelector('#_' + data.id))
+                }
+                
+                                
+                if (this.el.panelMessagesContainer.querySelector('#_' + data.id) && me){
+                    
+                    //"'#_' + data.id" Id assim para evitar caso o firebase crie id com número da frente, pq os seletores como por exemplo ="querySelector" não aceita id com número da frente.
+
+                    let msgEl = this.el.panelMessagesContainer.querySelector('#_' + data.id)
+                            
+                    //e atualizo o status dela
+                    msgEl.querySelector('.message-status').innerHTML = StatusMessage.getStatusViewElement(data.status).outerHTML;
+    
+                }
+                            
+                if (data.type === 'contact') {
+
+                    messageEl.querySelector('.btn-message-send').on('click', e => {
+
+                        //Criando um chat com a pessoa logada e contato enviado ou recebido
+                        Chat.createIfNotExists(this._user.email, data.content.email).then(chat => {
+
+                            //Preciso de um objeto da classe User para enviar no addContact
+                            let contact = new User(data.content.email);
+                            
+                            contact.on('datachange', userData => {
+
+                                //Contato enviado recebe chatID
+                                contact.chatId = chat.id;
+                                
+                                //Usuário logado adiciona contato recebido, caso exista vai ignorar
+                                this._user.addContact(contact);
+
+                                //Usuário logado recebe chatId.
+                                this._user.chatId = chat.id;
+
+                                //Contato enviado recebe contado do usuário logado.
+                                contact.addContact(this._user);
+
+                                //Cira um novo chat
+                                this.setActiveChat(contact);
+
+                            });
+
+                        });
+
+                    });
+
+                }
+            
+            });
+
+            
+
+            if (autoScroll) {
+                //Aumento a altura do scroll
+                this.el.panelMessagesContainer.scrollTop = (this.el.panelMessagesContainer.scrollHeight - this.el.panelMessagesContainer.offsetHeight);
+            } else {
+                //Deixo a tela parada na altura de onde eu estiver lendo que é no scrollTop atualizado
+                this.el.panelMessagesContainer.scrollTop = scrollTop;
+            }
+                 
+        })
        
         // "onSnapshot" - Busca a msg no firebase e atualiza na tela
-      
-       
 
         this.el.home.hide();
         this.el.main.css({
             display: 'flex'
         });
-      
     }
    
 
@@ -467,112 +510,112 @@ export class WhatsAppController {
 
     elementsPrototype() {
 
-      Element.prototype.hide = function () {
-          this.style.display = 'none';
-          return this;
-      }
+        Element.prototype.hide = function () {
+            this.style.display = 'none';
+            return this;
+        }
 
-      Element.prototype.show = function () {
-          this.style.display = 'block';
-          return this;
-      }
+        Element.prototype.show = function () {
+            this.style.display = 'block';
+            return this;
+        }
 
-      Element.prototype.toggle = function () {
-        //   if (this.style.display === 'none') {
-        //       this.show();
-        //   } else {
-        //       this.hide();
-        //   }
+        Element.prototype.toggle = function () {
+            //   if (this.style.display === 'none') {
+            //       this.show();
+            //   } else {
+            //       this.hide();
+            //   }
 
-        this.style.display = (this.style.display === 'none') ? 'block' : 'none'
-          return this;
-      }
+            this.style.display = (this.style.display === 'none') ? 'block' : 'none'
+            return this;
+        }
 
-      Element.prototype.on = function (events, fn) {
+        Element.prototype.on = function (events, fn) {
 
-          events.split(' ').forEach(event => {
+            events.split(' ').forEach(event => {
 
-              this.addEventListener(event, fn);
+                this.addEventListener(event, fn);
 
-          });
-          return this;
+            });
+            return this;
 
-      }
+        }
 
-      Element.prototype.css = function (styles) {
-         
-          for (let name in styles) {
-             this.style[name] = styles[name];
+        Element.prototype.css = function (styles) {
+            
+            for (let name in styles) {
+                this.style[name] = styles[name];
 
-          }
-          return this;
+            }
+            return this;
 
-      }
+        }
 
-      Element.prototype.addClass = function (name) {
+        Element.prototype.addClass = function (name) {
 
-          this.classList.add(name);
-          return this;
+            this.classList.add(name);
+            return this;
 
-      }
+        }
 
-      Element.prototype.removeClass = function (name) {
+        Element.prototype.removeClass = function (name) {
 
-          this.classList.remove(name);
-          return this;
+            this.classList.remove(name);
+            return this;
 
-      }
+        }
 
-      Element.prototype.toggleClass = function (name) {
+        Element.prototype.toggleClass = function (name) {
 
-          this.classList.toggle(name);
-          return this;
+            this.classList.toggle(name);
+            return this;
 
-      }
+        }
 
-      Element.prototype.hasClass = function (name) {
+        Element.prototype.hasClass = function (name) {
 
-          return this.classList.contains(name);
+            return this.classList.contains(name);
 
-      }
+        }
 
-      HTMLFormElement.prototype.getForm = function () {
+        HTMLFormElement.prototype.getForm = function () {
 
-        // Pega todos os campos dentro do formData
-        return new FormData(this);
+            // Pega todos os campos dentro do formData
+            return new FormData(this);
 
-      }
+        }
 
-      HTMLFormElement.prototype.toJSON = function () {
+        HTMLFormElement.prototype.toJSON = function () {
 
-        let json = {};
-        // Transformando retorn do formulário em json
-        this.getForm().forEach((value, key) => {
-            json[key] = value;
-        });
+            let json = {};
+            // Transformando retorn do formulário em json
+            this.getForm().forEach((value, key) => {
+                json[key] = value;
+            });
 
-        return json;
+            return json;
 
-       }
+        }
 
   }
 
-  initEvents() {
+    initEvents() {
 
+        // window.addEventListener('click', e => {
 
-        window.addEventListener('focus', e => {
+        //     this._myStatus = 'online me cima';
 
-            this._active = true;
+        //     console.log(this._myStatus)
+        //     setTimeout(() => {
 
-        });
+        //         this._myStatus = 'Desconectado em cima';
+        //         console.log(this._myStatus)
+        //     }, 5000);
 
-        window.addEventListener('blur', e => {
+        // });
 
-            this._active = false;
-
-        });
-
-                
+                       
         this.el.inputSearchContacts.on('keyup', e => {
         
             if(this.el.inputSearchContacts.value.length > 0) {
@@ -584,8 +627,9 @@ export class WhatsAppController {
             }
 
             this._user.getContacts(this.el.inputSearchContacts.value);
-       
+           
         });
+        
         
         
         this.el.myPhoto.on('click', event => {
@@ -1196,33 +1240,9 @@ export class WhatsAppController {
             });
 
         });
-
      
     }
 
-    // startRecordMicrophoneTime() {
-
-    //     let start = Date.now();
-
-    //     this._recordMicrophoneInterval = setInterval(() => {
-    //         this.el.recordMicrophoneTimer.innerHTML = Format.toTime(Date.now() - start);
-    //     }, 100);
-
-    //     // this._microphoneController = new MicrophoneController();
-
-    //     // this._microphoneController.on('ready', event => {
-
-    //     //     this._microphoneController.startRecorder();
-
-    //     // });
-
-    //     // this._microphoneController.on('timer', (data, event) => {
-
-    //     //     this.el.recordMicrophoneTimer.innerHTML = data.displayTimer;
-
-    //     // });
-
-    // }
 
     closeRecordMicrophone() {
 

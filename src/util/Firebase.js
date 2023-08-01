@@ -42,7 +42,7 @@ export class Firebase {
             let provider = new firebase.auth.GoogleAuthProvider();
 
             firebase.auth().signInWithPopup(provider).then(function (result) {
-
+                
                 let token = result.credential.accessToken;
                 let user = result.user;
 
