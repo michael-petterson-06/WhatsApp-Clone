@@ -525,8 +525,14 @@ export class Message extends Model {
 
         // let me = (data.from === user.email);
         
-        const arrayMsgs  = Message.structuralMsg(docs, chatId)
+        const arrayMsgs  = Message.structuralMsg(docs, chatId);
         
+        const msgsReceiveds = arrayMsgs.filter(element => element.status === 'received');
+        
+        const qntidadeMsgReceiveds = msgsReceiveds.length;
+
+        // console.log(msgsReceiveds)
+                  
         const lastMessage = arrayMsgs[arrayMsgs.length - 1]
      
         if(lastMessage) {
@@ -549,16 +555,18 @@ export class Message extends Model {
                                 idLastMessage: lastMessage.id,
                                 lastMessage: lastMessage.content,
                                 statusLastMessage: 'received',
+                                msgsReceiveds,
                                 lastMessageTime: new Date(),
                                 }, {
                                 merge: true
                             })
                         } 
-                        
+                                                       
                         else if (lastMessage.status === 'read') {
     
                             ref.set({
-                                statusLastMessage: 'read',
+                                    statusLastMessage: 'read',
+                                    msgsReceiveds,
                                 }, {
                                 merge: true,
                             });
