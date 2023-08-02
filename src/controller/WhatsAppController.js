@@ -138,7 +138,7 @@ export class WhatsAppController {
    
             this._clear = setTimeout(() => {
                 
-                this._user.statusUser = 'Desconectar';
+                this._user.statusUser = '';
 
                 this._user.save()
 
@@ -158,16 +158,14 @@ export class WhatsAppController {
                   
         this._user.on('contactschange', docs => {
                 
-                
             this.el.contactsMessagesList.innerHTML = '';
-                
-            
+                  
             docs.forEach(doc => {
                     
                 let contact = doc.data();
 
                 contact.id = doc.id;
-
+                
                 // contact.statusUser = this._user.statusUser
                                     
                 let contactEl = document.createElement('div');
@@ -217,7 +215,7 @@ export class WhatsAppController {
                                     <div class="_3Bxar">
                                         <span>
                                             <div class="_15G96">
-                                                <span class="OUeyt messages-count-new" style="display:none;">1</span>
+                                                <span class="OUeyt messages-count-new" style="display:none;">${contact.msgsReceiveds.length}</span>
                                             </div>
                                     </span></div>
                                 </span>
@@ -225,6 +223,20 @@ export class WhatsAppController {
                         </div>
                     </div>
                 `;
+                
+                console.log(contact)
+                if(contact.msgsReceiveds && contact.msgsReceiveds.length > 0) {
+                    contactEl.querySelector('.messages-count-new').css({
+                        display: 'flex',
+                    });
+                } else {
+
+                    contactEl.querySelector('.messages-count-new').css({
+                        display:'nome',
+                    });
+                    
+                }
+                
 
                 if (contact.photo) {
 
@@ -263,6 +275,56 @@ export class WhatsAppController {
     }
 
     
+    statusOfContact(contact){
+        
+        window.addEventListener('click', e => {
+
+            this.el.activeStatus.className = 'O90ur ' + contact.id
+
+            this._userStatus = new User(contact.email);
+
+            this._user.statusUser = 'Online';
+                
+            this._user.save();
+            
+            this._userStatus.on('datachange', data => {
+                
+                       
+                if(this.el.activeStatus.classList.contains(`${contact.id}`)){
+                    this.el.activeStatus.innerHTML = data.statusUser;
+                }
+                
+                if(this.el.activeStatus.innerHTML === 'undefined'){
+                    this.el.activeStatus.innerHTML = '';
+                }
+
+                
+                if(this._clear) clearTimeout(this._clear);
+
+                this._clear = setTimeout(() => {
+                   
+                    this._userStatus = new User(contact.email);
+
+                    this._user.statusUser = '';
+    
+                    this._user.save();
+
+                    if(this.el.activeStatus.classList.contains(`${contact.id}`)){
+                        this.el.activeStatus.innerHTML = data.statusUser;
+                    }
+                                                           
+                    if(this.el.activeStatus.innerHTML === 'undefined'){
+                        this.el.activeStatus.innerHTML = '';
+                    }
+                    
+   
+                }, 5000);
+ 
+            });
+            
+        });
+
+    }
 
     setActiveChat(contact){
         
@@ -288,54 +350,9 @@ export class WhatsAppController {
             
         this.el.activeName.innerHTML = contact.name;
         
-        this.el.activeStatus.className = 'O90ur ' + contact.id
         
-        window.addEventListener('click', e => {
-
-            this._userStatus = new User(contact.email);
-
-            this._user.statusUser = 'Online';
-                
-            this._user.save();
-            
-            this._userStatus.on('datachange', data => {
-                
-                       
-                if(this.el.activeStatus.classList.contains(`${contact.id}`)){
-                    this.el.activeStatus.innerHTML = data.statusUser;
-                }
-                
-                if(this.el.activeStatus.innerHTML === 'undefined'){
-                    this.el.activeStatus.innerHTML = 'Desconectado';
-                }
-
-                
-                if(this._clear) clearTimeout(this._clear);
-
-                this._clear = setTimeout(() => {
-                   
-                    this._userStatus = new User(contact.email);
-
-                    this._user.statusUser = 'Desconectar';
-    
-                    this._user.save();
-
-                    if(this.el.activeStatus.classList.contains(`${contact.id}`)){
-                        this.el.activeStatus.innerHTML = data.statusUser;
-                    }
-                                                           
-                    if(this.el.activeStatus.innerHTML === 'undefined'){
-                        this.el.activeStatus.innerHTML = 'Desconectado';
-                    }
-                    
-   
-                }, 5000);
- 
-            });
-            
-        });
-             
-       
+        this.statusOfContact(contact)
+              
         if (contact.photo) {
             let img = this.el.activePhoto;
             img.src = contact.photo;
