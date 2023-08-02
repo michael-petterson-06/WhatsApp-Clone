@@ -215,7 +215,7 @@ export class WhatsAppController {
                                     <div class="_3Bxar">
                                         <span>
                                             <div class="_15G96">
-                                                <span class="OUeyt messages-count-new" style="display:none;">${contact.msgsReceiveds.length}</span>
+                                                <span class="OUeyt messages-count-new" style="display:none;">${contact.qntidadeMsgReceiveds}</span>
                                             </div>
                                     </span></div>
                                 </span>
@@ -224,8 +224,8 @@ export class WhatsAppController {
                     </div>
                 `;
                 
-                console.log(contact)
-                if(contact.msgsReceiveds && contact.msgsReceiveds.length > 0) {
+                
+                if(contact.qntidadeMsgReceiveds > 0 && contact.lastMessageFrom !== this._user.email) {
                     contactEl.querySelector('.messages-count-new').css({
                         display: 'flex',
                     });

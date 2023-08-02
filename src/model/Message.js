@@ -523,7 +523,7 @@ export class Message extends Model {
     //  static statusMsgLastContac(chatId, idMessage, sendAndReceived, read) {
     static statusMsgLastContac(docs, user, contact, chatId) {
 
-        // let me = (data.from === user.email);
+        
         
         const arrayMsgs  = Message.structuralMsg(docs, chatId);
         
@@ -534,6 +534,8 @@ export class Message extends Model {
         // console.log(msgsReceiveds)
                   
         const lastMessage = arrayMsgs[arrayMsgs.length - 1]
+
+        let me = (lastMessage.from === user.email);
      
         if(lastMessage) {
 
@@ -549,24 +551,30 @@ export class Message extends Model {
 
                         // this._user = new User(response.user.email)
                         let ref = Firebase.db().collection('users').doc((contact.email)).collection('contacts').doc(Base64.encode64(user.email));
-                                                                                                          
+
+                        // if(user.email === lastMessage.from) {
+                        //     qntidadeMsgReceiveds = 0
+                        // }
+                                                
                         if (lastMessage.status === 'received') { 
+                            console.log(1)                        
                             ref.set({
                                 idLastMessage: lastMessage.id,
                                 lastMessage: lastMessage.content,
                                 statusLastMessage: 'received',
-                                msgsReceiveds,
+                                qntidadeMsgReceiveds,
+                                lastMessageFrom: lastMessage.from,
                                 lastMessageTime: new Date(),
                                 }, {
                                 merge: true
-                            })
-                        } 
-                                                       
+                            });
+                        }
+                               
                         else if (lastMessage.status === 'read') {
-    
+                            console.log(2)                        
                             ref.set({
                                     statusLastMessage: 'read',
-                                    msgsReceiveds,
+                                    qntidadeMsgReceiveds,
                                 }, {
                                 merge: true,
                             });
